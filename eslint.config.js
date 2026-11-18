@@ -27,7 +27,7 @@ export default tseslint.config(
     ...tseslint.configs.disableTypeChecked,
   },
   {
-    files: ["**/*.tsx"],
+    files: ["**/*.{ts,tsx}"],
     ...reactHooks.configs.flat.recommended,
   },
   {

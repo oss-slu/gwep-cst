@@ -8,6 +8,15 @@ const viewports = [
   { name: "shared screen", width: 1920, height: 1080 },
 ];
 
+test.describe("app shell without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("still has the page title", async ({ page }) => {
+    await page.goto("/");
+    await expect(page).toHaveTitle(site.name);
+  });
+});
+
 for (const viewport of viewports) {
   test.describe(`app shell on a ${viewport.name}`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });

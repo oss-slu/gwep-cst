@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import site from "../../content/site.json";
+import site from "../../content/site.json" with { type: "json" };
 import { App } from "./App";
 
 describe("App shell", () => {
@@ -15,6 +15,6 @@ describe("App shell", () => {
   it("has a main landmark", () => {
     render(<App />);
 
-    expect(screen.getByRole("main")).toBeDefined();
+    expect(screen.getByRole("main").tagName).toBe("MAIN");
   });
 });

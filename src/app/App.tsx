@@ -1,12 +1,9 @@
-import site from "../../content/site.json";
+import site from "../../content/site.json" with { type: "json" };
 
 export function App() {
   return (
-    <>
-      <title>{site.name}</title>
-      <main>
-        <h1>{site.name}</h1>
-      </main>
-    </>
+    <main>
+      <h1>{site.name}</h1>
+    </main>
   );
 }

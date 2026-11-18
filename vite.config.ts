@@ -1,8 +1,28 @@
 import react from "@vitejs/plugin-react";
+import type { Plugin } from "vite";
 import { defineConfig } from "vitest/config";
+import site from "./content/site.json" with { type: "json" };
+
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+// Writes the page title from content/site.json into index.html, so the
+// title is present before any JavaScript runs and the name lives in one place.
+function siteTitle(): Plugin {
+  return {
+    name: "site-title",
+    transformIndexHtml: () => [
+      { tag: "title", children: escapeHtml(site.name), injectTo: "head" },
+    ],
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), siteTitle()],
   test: {
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],
