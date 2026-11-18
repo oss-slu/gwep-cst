@@ -4,7 +4,13 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist/", "coverage/", "test-results/", "playwright-report/"],
+    ignores: [
+      "dist/",
+      "coverage/",
+      "test-results/",
+      "playwright-report/",
+      "lighthouse-reports/",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
@@ -17,8 +23,20 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/*.js"],
+    files: ["**/*.{js,mjs}"],
     ...tseslint.configs.disableTypeChecked,
+  },
+  {
+    // Node scripts run in CI; declare the Node globals they use.
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        fetch: "readonly",
+        process: "readonly",
+        setTimeout: "readonly",
+      },
+    },
   },
   {
     files: ["**/*.{ts,tsx}"],
