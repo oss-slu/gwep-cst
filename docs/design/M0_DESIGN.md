@@ -1,6 +1,6 @@
 # M0 Design and Gate 1 Review
 
-Status: **Proposed, awaiting approval by Mathew Shereni.** No implementation starts until this document is approved in its pull request.
+Status: **Approved, November 17, 2026.** The demo and delivery decisions approved with this design are recorded in §4.1.
 
 Scope: milestone M0, the demo prototype for the GWEP meeting on Monday, November 23, 2026, and the architecture that M1 to M3 build on. See `docs/PROJECT_CONTEXT.md` for background and `docs/AI_DEVELOPMENT_SECURITY_REVIEW.md` for the review gates this document answers.
 
@@ -41,7 +41,7 @@ Assumptions, and what happens if each one is wrong:
 | Public site (static files) | Untrusted visitors, read-only | No server logic, strict security headers, no third-party scripts |
 | `/admin` CMS | Authenticated GWEP editors and OSS maintainers | GitHub OAuth. Only repository collaborators can commit. Editorial workflow puts edits through review before publishing |
 | Session content files | Semi-trusted (written through the CMS) | Validated by schema at build. Always rendered as text, never as raw HTML |
-| Media uploads | Semi-trusted | CMS limits file types (JPEG, PNG, WebP, AVIF, MP3, M4A, OGG) and sizes. Files are served as static assets only |
+| Media uploads | Semi-trusted | CMS limits file types (JPEG, PNG, WebP, AVIF, MP3, M4A, OGG) and sizes (limits in §4.1). Files are served as static assets only |
 | OAuth proxy (Cloudflare Worker, M1) | Holds the OAuth client secret | Secret in Cloudflare secrets, never in the repository. Allows only the production origin |
 | CI and deployment pipeline | Holds the deploy token | Token scoped to this project only. Pull requests from forks get no secrets |
 
@@ -63,7 +63,7 @@ Assumptions, and what happens if each one is wrong:
 **Main bottleneck:** media bandwidth. Mitigations:
 
 - Images in AVIF or WebP at the sizes actually displayed, with `srcset`, `width` and `height` set to prevent layout shift.
-- Audio compressed for speech and short sounds (mono, low bitrate) and normalized to one loudness target.
+- Audio compressed for speech and short sounds (mono, low bitrate) and normalized to one loudness target (−16 LUFS, see §4.1).
 - Content-hashed file names with one-year immutable caching. Only `index.html` revalidates.
 
 **Performance budgets** (enforced in CI with Lighthouse CI and bundle-size checks):
@@ -75,6 +75,8 @@ Assumptions, and what happens if each one is wrong:
 | Interaction to Next Paint | 200 ms or less |
 | Cumulative Layout Shift | 0.1 or less |
 | Lighthouse performance and accessibility | 95 or higher |
+
+How Interaction to Next Paint is reported in M0 is set out in §4.1.
 
 **Speed and memory techniques**
 
@@ -98,7 +100,7 @@ Assumptions, and what happens if each one is wrong:
 
 - **CI on every pull request:** lint, typecheck, unit tests, end-to-end tests with axe accessibility checks, content validation, build, bundle budget, Lighthouse CI.
 - **Security automation:** Dependabot, `npm audit` (fails on high or critical), CodeQL, and secret scanning with gitleaks.
-- **Preview deployments** per pull request, so GWEP and reviewers can click through changes.
+- **Preview deployments** per pull request, so GWEP and reviewers can click through changes. These start in M1 under an OSS- or SLU-owned Cloudflare account; M0 is demonstrated from a local URL (§4.1).
 - **Monitoring:** an uptime and certificate check alerting OSS and GWEP. No logs or analytics containing personal data.
 - **Deferred until requirements justify them:** R2 media storage, offline mode, viewer sign-in, other languages, analytics.
 
@@ -160,7 +162,47 @@ Small pull requests, each reviewed by Codex and Antigravity and approved by Math
 4. **Slides and content:** title, calendar day, month and year, weather with movable thermometer, sounds, reveal. Orientation session JSON with clearly marked placeholder media.
 5. **CMS:** Decap at `/admin` working locally with `decap-server`, field definitions generated from the slide modules.
 
-Done for M0 means: all five pull requests merged, CI green, zero serious accessibility violations, and the Orientation session demoable from a local or preview URL.
+The five areas above are delivered through the split M0 issue backlog (M0-00 to M0-11), one issue per pull request. Done for M0 means: every M0 issue closed by its merged pull request, CI green, zero serious accessibility violations, and the Orientation session demoable from a local URL.
+
+### 4.1 Approved M0 decisions
+
+Approved with this design on November 17, 2026.
+
+**Session list and demo**
+
+- The session list shows all fourteen session names in project order (`docs/PROJECT_CONTEXT.md` section 9).
+- Orientation is the only session that can be opened in M0. The other thirteen show a visible "Coming soon" label and are left out of the tab order.
+- The demo sequence, verified in M0-09: welcome, calendar day, calendar month, calendar year, weather with the movable thermometer, one Sounds slide with two or three placeholder clips, the four Orientation Reveal slides (prompts in `docs/PROJECT_CONTEXT.md` section 10), and closing.
+
+**Media limits**
+
+| Media | Limit |
+| --- | --- |
+| Image file size | 2 MB maximum |
+| Optimized image | About 500 KB (performance target) |
+| Audio file size | 5 MB maximum per clip |
+| Audio channels | Mono |
+| Audio loudness | −16 LUFS integrated target |
+| Audio true peak | −1 dBTP ceiling |
+
+CI media validation fails the build on any violation of these limits.
+
+**Hosting and previews**
+
+- A local URL is sufficient for the November 23 demo.
+- Cloudflare preview deployments move to M1, under an OSS- or SLU-owned account.
+
+**CMS sequencing**
+
+1. The typed slide registry and CMS field generation land first (M0-04).
+2. Each slide type then ships its schema, component, unit test and generated CMS fields together in one pull request.
+3. The local Decap portal at `/admin`, run with `decap-server`, comes last (M0-10).
+
+**Interaction to Next Paint reporting**
+
+- The target stays at 200 ms or less (§2.3).
+- The formal M0 INP status is **Not Tested**.
+- Once player navigation exists, a player-navigation INP measurement is attached to M0-09.
 
 ## 5. Approval workflow
 
@@ -175,8 +217,8 @@ Recommended branch protection on `main`: require a pull request, one approving r
 
 ## 6. Open items needing a decision
 
-- Approval of this design.
-- Who owns the Cloudflare account for previews before SLU's account is set up.
+- ~~Approval of this design.~~ Resolved: approved November 17, 2026.
+- ~~Who owns the Cloudflare account for previews before SLU's account is set up.~~ Resolved: previews move to M1 under an OSS- or SLU-owned account (§4.1).
 - GWEP answers to the requirements questions (due November 20) may change slide types or scope. They will be handled as plan updates through the workflow above.
 
 ## 7. Gate 2 status

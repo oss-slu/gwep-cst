@@ -151,7 +151,20 @@ From GWEP's document `CST virtual edits.docx`, to be built into the new sessions
 - Weather slide: one thermometer with a movable marker.
 - Food Planning: a final slide showing all of the meal choices together.
 - Childhood: replace "When did you finish school?" with "How did you get to school?".
-- Orientation: four new reveal slides from `orientation session updates.pptx` (landmark state, landmark country, food countries, clothing countries), twelve images supplied by GWEP.
+- Orientation: four new reveal slides from `orientation session updates.pptx` (landmark state, landmark country, food countries, clothing countries). We will request the original PowerPoint and its twelve images from GWEP for M1.
+
+### Orientation reveal prompts (verbatim)
+
+Source: the signed Scope of Work, Deliverable #7, which quotes GWEP's `orientation session updates.pptx`. Use these prompts exactly as written and in this order.
+
+1. What state is the famous landmark located?
+2. The famous landmark is located in what country?
+3. What countries are known for this food?
+4. What country is known for this type of clothing?
+
+Each prompt is a `reveal` slide that pairs an image with an answer; the answer appears only when the facilitator clicks or taps. In M0, both the image and the answer are placeholders and are clearly labeled as placeholders.
+
+Note: Mathew will ask GWEP to confirm whether prompt 1 is missing a final "in". M0 keeps the supplied wording above.
 
 ## 11. Open questions sent to GWEP (answers requested by November 20, 2026)
 
