@@ -1,11 +1,16 @@
 name: CodeQL
 
+# Disabled for now: the repository uses GitHub's CodeQL default setup, which
+# rejects results uploaded by this workflow. To switch back, turn off default
+# setup in the repository's code security settings, then restore these
+# triggers:
+#   pull_request:
+#   push:
+#     branches: [main]
+#   schedule:
+#     - cron: "17 6 * * 1"
 on:
-  pull_request:
-  push:
-    branches: [main]
-  schedule:
-    - cron: "17 6 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
