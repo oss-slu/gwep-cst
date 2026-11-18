@@ -31,7 +31,7 @@ The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=
 
 ## Continuous integration
 
-Every pull request and every push to `main` runs two workflows in `.github/workflows/`. Both use a read-only token and no secrets, so pull requests from forks get nothing extra.
+Every pull request and every push to `main` runs the CI workflow, `.github/workflows/ci.yml`. It uses a read-only token and no secrets, so pull requests from forks get nothing extra.
 
 | Check | What it runs |
 | --- | --- |
@@ -40,10 +40,10 @@ Every pull request and every push to `main` runs two workflows in `.github/workf
 | `audit` | `npm audit --audit-level=high` (fails on high or critical findings) |
 | `lighthouse` | Lighthouse budgets; reports are kept as workflow artifacts, never uploaded publicly |
 | `secrets` | gitleaks on the full git history (binary checked against its SHA-256 checksum) |
-| `codeql` | CodeQL for JavaScript and TypeScript, also weekly |
+| CodeQL | GitHub's CodeQL default setup, configured in the repository's code security settings. `.github/workflows/codeql.yml` is kept but only runs when started by hand, because default setup rejects its results |
 
 Dependabot (`.github/dependabot.yml`) proposes npm and GitHub Actions updates weekly, and waits 14 days after each release. Actions are pinned to full commit SHAs.
 
-**Required checks for `main`:** `checks`, `e2e`, `audit` and `secrets`. Add `lighthouse` once it passes reliably on GitHub's runner, and `codeql` once its results upload has been confirmed.
+**Required checks for `main`:** `checks`, `e2e`, `audit` and `secrets`. Add `lighthouse` once it passes reliably on GitHub's runner. The CodeQL check from default setup can also be required.
 
 Security headers live in `public/_headers` (Cloudflare format). `/admin` stays under the strict site policy until the CMS issue adds a verified admin policy.
