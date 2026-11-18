@@ -20,7 +20,7 @@ function readMaxKb(args) {
 
 // Entry scripts and module preloads are what the browser fetches up front.
 function initialScripts(html) {
-  const tags = html.match(/<(script|link)\b[^>]*>/g) ?? [];
+  const tags = html.match(/<(script|link)\b[^>]*>/gi) ?? [];
   return tags
     .filter(
       (tag) => /type="module"/.test(tag) || /rel="modulepreload"/.test(tag),
