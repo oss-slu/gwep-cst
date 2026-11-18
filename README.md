@@ -26,3 +26,24 @@ The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=
 | `npm run typecheck` | TypeScript check                                              |
 | `npm test`          | Unit and component tests (Vitest)                             |
 | `npm run test:e2e`  | Browser and accessibility tests (Playwright with axe-core)    |
+| `npm run check:bundle` | Fail if the initial JavaScript is over 100 kB gzip (run after `build`) |
+| `npm run check:lighthouse` | Lighthouse budgets, median of three mobile runs (run after `build`; needs Google Chrome) |
+
+## Continuous integration
+
+Every pull request and every push to `main` runs two workflows in `.github/workflows/`. Both use a read-only token and no secrets, so pull requests from forks get nothing extra.
+
+| Check | What it runs |
+| --- | --- |
+| `checks` | `npm ci`, lint, typecheck, unit tests, build, bundle budget |
+| `e2e` | Playwright with axe, including the security-header test |
+| `audit` | `npm audit --audit-level=high` (fails on high or critical findings) |
+| `lighthouse` | Lighthouse budgets; reports are kept as workflow artifacts, never uploaded publicly |
+| `secrets` | gitleaks on the full git history (binary checked against its SHA-256 checksum) |
+| `codeql` | CodeQL for JavaScript and TypeScript, also weekly |
+
+Dependabot (`.github/dependabot.yml`) proposes npm and GitHub Actions updates weekly, and waits 14 days after each release. Actions are pinned to full commit SHAs.
+
+**Required checks for `main`:** `checks`, `e2e`, `audit` and `secrets`. Add `lighthouse` once it passes reliably on GitHub's runner, and `codeql` once its results upload has been confirmed.
+
+Security headers live in `public/_headers` (Cloudflare format). `/admin` stays under the strict site policy until the CMS issue adds a verified admin policy.
