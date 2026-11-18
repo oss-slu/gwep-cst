@@ -66,7 +66,7 @@ Assumptions, and what happens if each one is wrong:
 - Audio compressed for speech and short sounds (mono, low bitrate) and normalized to one loudness target (−16 LUFS, see §4.1).
 - Content-hashed file names with one-year immutable caching. Only `index.html` revalidates.
 
-**Performance budgets** (enforced in CI with Lighthouse CI and bundle-size checks):
+**Performance budgets** (enforced in CI with Lighthouse CI and bundle-size checks, except Interaction to Next Paint, which is not enforced in CI for M0; see §4.1):
 
 | Metric | Budget |
 | --- | --- |
@@ -75,8 +75,6 @@ Assumptions, and what happens if each one is wrong:
 | Interaction to Next Paint | 200 ms or less |
 | Cumulative Layout Shift | 0.1 or less |
 | Lighthouse performance and accessibility | 95 or higher |
-
-How Interaction to Next Paint is reported in M0 is set out in §4.1.
 
 **Speed and memory techniques**
 
@@ -162,7 +160,7 @@ Small pull requests, each reviewed by Codex and Antigravity and approved by Math
 4. **Slides and content:** title, calendar day, month and year, weather with movable thermometer, sounds, reveal. Orientation session JSON with clearly marked placeholder media.
 5. **CMS:** Decap at `/admin` working locally with `decap-server`, field definitions generated from the slide modules.
 
-The five areas above are delivered through the split M0 issue backlog (M0-00 to M0-11), one issue per pull request. Done for M0 means: every M0 issue closed by its merged pull request, CI green, zero serious accessibility violations, and the Orientation session demoable from a local URL.
+The five areas above are delivered through the split M0 issue backlog (M0-00 to M0-11), one issue per pull request. Done for M0 means: every M0 issue closed by its merged pull request, CI green, zero serious or critical axe violations, and the Orientation session demoable from a local URL.
 
 ### 4.1 Approved M0 decisions
 
@@ -176,16 +174,16 @@ Approved with this design on November 17, 2026.
 
 **Media limits**
 
-| Media | Limit |
-| --- | --- |
-| Image file size | 2 MB maximum |
-| Optimized image | About 500 KB (performance target) |
-| Audio file size | 5 MB maximum per clip |
-| Audio channels | Mono |
-| Audio loudness | −16 LUFS integrated target |
-| Audio true peak | −1 dBTP ceiling |
+| Media | Limit | Enforced by CI |
+| --- | --- | --- |
+| Image file size | 2 MB maximum | Yes |
+| Optimized image | About 500 KB | No, optimization target |
+| Audio file size | 5 MB maximum per clip | Yes |
+| Audio channels | Mono | Yes |
+| Audio loudness | −16 LUFS integrated target | Yes |
+| Audio true peak | −1 dBTP ceiling | Yes |
 
-CI media validation fails the build on any violation of these limits.
+CI media validation enforces the mandatory limits (every row marked Yes) and fails the build on any violation. The 500 KB figure is an optimization target, not a cap: an otherwise compliant 700 KB image passes.
 
 **Hosting and previews**
 
@@ -201,7 +199,7 @@ CI media validation fails the build on any violation of these limits.
 **Interaction to Next Paint reporting**
 
 - The target stays at 200 ms or less (§2.3).
-- The formal M0 INP status is **Not Tested**.
+- INP is not enforced in CI for M0, and the formal M0 INP status is **Not Tested**.
 - Once player navigation exists, a player-navigation INP measurement is attached to M0-09.
 
 ## 5. Approval workflow

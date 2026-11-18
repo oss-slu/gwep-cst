@@ -162,7 +162,7 @@ Source: the signed Scope of Work, Deliverable #7, which quotes GWEP's `orientati
 3. What countries are known for this food?
 4. What country is known for this type of clothing?
 
-Each prompt is a `reveal` slide that pairs an image with an answer; the answer appears only when the facilitator clicks or taps. In M0, both the image and the answer are placeholders and are clearly labeled as placeholders.
+Each prompt is a `reveal` slide that pairs an image with an answer; the answer appears only when the facilitator activates the Reveal control. In M0, both the image and the answer are placeholders and are clearly labeled as placeholders.
 
 Note: Mathew will ask GWEP to confirm whether prompt 1 is missing a final "in". M0 keeps the supplied wording above.
 
