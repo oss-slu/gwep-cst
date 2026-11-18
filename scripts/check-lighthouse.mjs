@@ -6,6 +6,7 @@ import { execFile, spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { median, readMetrics } from "./lighthouse-metrics.mjs";
 
 const PORT = 4174;
 const URL_TO_TEST = `http://localhost:${String(PORT)}/`;
@@ -22,11 +23,6 @@ const budgets = [
 ];
 
 const run = promisify(execFile);
-
-function median(values) {
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.floor(sorted.length / 2)];
-}
 
 async function waitForServer(server) {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
@@ -56,12 +52,7 @@ async function lighthouseRun(index) {
     "--quiet",
   ]);
   const report = JSON.parse(readFileSync(outputPath, "utf8"));
-  return {
-    performance: report.categories.performance.score * 100,
-    accessibility: report.categories.accessibility.score * 100,
-    lcp: report.audits["largest-contentful-paint"].numericValue,
-    cls: report.audits["cumulative-layout-shift"].numericValue,
-  };
+  return readMetrics(report, `Run ${String(index)}`);
 }
 
 function report(results) {
