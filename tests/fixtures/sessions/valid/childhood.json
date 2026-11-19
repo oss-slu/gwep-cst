@@ -1,0 +1,6 @@
+{
+  "slug": "childhood",
+  "number": 1,
+  "title": "Fixture: Childhood",
+  "slides": [{ "type": "title", "id": "welcome" }]
+}

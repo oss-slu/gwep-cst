@@ -25,7 +25,11 @@ export default defineConfig({
   plugins: [react(), siteTitle()],
   test: {
     environment: "jsdom",
-    include: ["src/**/*.test.{ts,tsx}", "tests/unit/**/*.test.{ts,mjs}"],
+    include: [
+      "src/**/*.test.{ts,tsx}",
+      "tests/unit/**/*.test.{ts,mjs}",
+      "tests/node/**/*.test.ts",
+    ],
     setupFiles: ["src/test/setup.ts"],
   },
 });

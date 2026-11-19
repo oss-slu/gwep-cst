@@ -1,0 +1,6 @@
+{
+  "slug": "beta",
+  "number": 2,
+  "title": "Chunking fixture beta",
+  "slides": [{ "type": "title", "id": "welcome" }]
+}
