@@ -17,7 +17,9 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        // Browser code and Node code (scripts, Node-side tests) are separate
+        // TypeScript projects; both get type-aware lint rules.
+        project: ["./tsconfig.json", "./tsconfig.node.json"],
         tsconfigRootDir: import.meta.dirname,
       },
     },

@@ -14,11 +14,15 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
   },
   "include": [
     "src",
-    "tests",
+    "tests/e2e",
+    "tests/unit",
+    "tests/support",
     "content",
     "vite.config.ts",
     "playwright.config.ts"

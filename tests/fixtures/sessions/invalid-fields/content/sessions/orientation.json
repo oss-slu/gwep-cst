@@ -1,0 +1,10 @@
+{
+  "slug": "orientation",
+  "number": 15,
+  "title": "Fixture: Orientation",
+  "titel": "typo",
+  "slides": [
+    { "type": "title", "id": "welcome" },
+    { "type": "title", "id": "welcome" }
+  ]
+}

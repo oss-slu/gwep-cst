@@ -26,8 +26,15 @@ The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=
 | `npm run typecheck` | TypeScript check                                              |
 | `npm test`          | Unit and component tests (Vitest)                             |
 | `npm run test:e2e`  | Browser and accessibility tests (Playwright with axe-core)    |
+| `npm run validate-content` | Check every file in `content/sessions/` against the content schema |
 | `npm run check:bundle` | Fail if the initial JavaScript is over 100 kB gzip (run after `build`) |
 | `npm run check:lighthouse` | Lighthouse budgets, median of three mobile runs (run after `build`; needs Google Chrome) |
+
+## Content
+
+Each session is one JSON file, `content/sessions/<slug>.json`, checked against the zod schema in `src/content/schema.ts`. `npm run validate-content` runs before every production build and in CI; any problem stops the build and is printed as `file: field.path: message`. The app loads a session only when it is opened, and checks it again with the same schema.
+
+Code in `src/content/` imports with explicit `.ts` extensions, because `scripts/validate-content.ts` runs it directly with Node.
 
 ## Continuous integration
 
