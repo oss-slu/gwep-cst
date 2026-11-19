@@ -1,5 +1,6 @@
-// Validates every session file and exits 1 if any problem is found.
-// Usage: node scripts/validate-content.ts [folder]   (default: content/sessions)
+// Validates every session file in content/sessions/ (relative to the folder
+// it is run from) and exits 1 if any problem is found. It takes no arguments.
+// Usage: npm run validate-content
 import type { Dirent } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -11,7 +12,7 @@ import {
   type ContentProblem,
 } from "../src/content/validate.ts";
 
-const folder = process.argv[2] ?? "content/sessions";
+const folder = "content/sessions";
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
