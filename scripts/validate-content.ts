@@ -1,5 +1,6 @@
 // Validates every session file and exits 1 if any problem is found.
 // Usage: node scripts/validate-content.ts [folder]   (default: content/sessions)
+import type { Dirent } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Session } from "../src/content/schema.ts";
@@ -16,17 +17,25 @@ function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-async function sessionFileNames(): Promise<string[]> {
+// Every *.json entry counts, whatever it is: Vite's session glob also picks up
+// symbolic links, so anything that is not a regular file is reported, never
+// skipped.
+async function sessionEntries(): Promise<Dirent[]> {
   const entries = await readdir(folder, { withFileTypes: true });
   return entries
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-    .map((entry) => entry.name)
-    .sort();
+    .filter((entry) => entry.name.endsWith(".json"))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-let names: string[];
+function notARegularFile(entry: Dirent): string {
+  return entry.isSymbolicLink()
+    ? "Session files must be regular files, not symbolic links"
+    : "Session files must be regular files";
+}
+
+let entries: Dirent[];
 try {
-  names = await sessionFileNames();
+  entries = await sessionEntries();
 } catch (error) {
   console.error(
     `validate-content: cannot read session folder "${folder}": ${describe(error)}`,
@@ -37,8 +46,12 @@ try {
 const problems: ContentProblem[] = [];
 const sessions: { file: string; session: Session }[] = [];
 
-for (const name of names) {
-  const file = join(folder, name);
+for (const entry of entries) {
+  const file = join(folder, entry.name);
+  if (!entry.isFile()) {
+    problems.push({ file, path: "", message: notARegularFile(entry) });
+    continue;
+  }
   let text: string;
   try {
     text = await readFile(file, "utf8");
@@ -57,7 +70,7 @@ for (const name of names) {
 problems.push(...checkSessionSet(sessions));
 
 for (const problem of problems) console.error(formatProblem(problem));
-const count = `${String(names.length)} session file${names.length === 1 ? "" : "s"}`;
+const count = `${String(entries.length)} session file${entries.length === 1 ? "" : "s"}`;
 if (problems.length > 0) {
   console.error(
     `\nvalidate-content: ${String(problems.length)} problem(s) in ${count}.`,

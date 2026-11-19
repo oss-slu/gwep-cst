@@ -1,6 +1,14 @@
 // @vitest-environment node
 import { execFile } from "node:child_process";
-import { chmod, mkdtemp, readdir, rm } from "node:fs/promises";
+import {
+  chmod,
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readdir,
+  rm,
+  symlink,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -63,6 +71,40 @@ describe("validate-content", () => {
       `${FIXTURES}/set-problems/copy.json: slug: Slug "orientation" must match the file name "copy"`,
     );
     expect(result.stderr).toContain("number: Session number 9 is also used by");
+  });
+
+  it("rejects a symbolic link named like a session file", async () => {
+    const folder = await mkdtemp(join(tmpdir(), "sessions-"));
+    try {
+      const target = join(folder, "outside.txt");
+      await copyFile(`${FIXTURES}/valid/orientation.json`, target);
+      await symlink(target, join(folder, "orientation.json"));
+
+      const result = await runValidator(folder);
+
+      expect(result.code).toBe(1);
+      expect(result.stderr).toContain(
+        `${join(folder, "orientation.json")}: Session files must be regular files, not symbolic links`,
+      );
+    } finally {
+      await rm(folder, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a folder named like a session file", async () => {
+    const folder = await mkdtemp(join(tmpdir(), "sessions-"));
+    try {
+      await mkdir(join(folder, "orientation.json"));
+
+      const result = await runValidator(folder);
+
+      expect(result.code).toBe(1);
+      expect(result.stderr).toContain(
+        `${join(folder, "orientation.json")}: Session files must be regular files`,
+      );
+    } finally {
+      await rm(folder, { recursive: true, force: true });
+    }
   });
 
   it("passes an existing empty folder", async () => {
