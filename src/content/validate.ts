@@ -1,4 +1,4 @@
-import { sessionSchema, type Session } from "./schema.ts";
+import type { z } from "zod";
 
 /** One thing wrong with a content file, pointing at the field when known. */
 export interface ContentProblem {
@@ -8,8 +8,14 @@ export interface ContentProblem {
   readonly message: string;
 }
 
-export type CheckResult =
-  | { readonly ok: true; readonly session: Session }
+/** The fields of a session that checks across files rely on. */
+export interface SessionSummary {
+  readonly slug: string;
+  readonly number: number;
+}
+
+export type CheckResult<S> =
+  | { readonly ok: true; readonly session: S }
   | { readonly ok: false; readonly problems: readonly ContentProblem[] };
 
 export function formatProblem(problem: ContentProblem): string {
@@ -28,9 +34,13 @@ function formatPath(path: readonly PropertyKey[]): string {
     .join("");
 }
 
-/** Checks already-parsed data against the session schema. */
-export function checkSessionData(file: string, data: unknown): CheckResult {
-  const result = sessionSchema.safeParse(data);
+/** Checks already-parsed data against a session schema. */
+export function checkSessionData<S>(
+  file: string,
+  data: unknown,
+  schema: z.ZodType<S>,
+): CheckResult<S> {
+  const result = schema.safeParse(data);
   if (result.success) return { ok: true, session: result.data };
   return {
     ok: false,
@@ -42,8 +52,12 @@ export function checkSessionData(file: string, data: unknown): CheckResult {
   };
 }
 
-/** Parses a session file's text, then checks it. */
-export function checkSessionText(file: string, text: string): CheckResult {
+/** Parses a session file's text, then checks it against a session schema. */
+export function checkSessionText<S>(
+  file: string,
+  text: string,
+  schema: z.ZodType<S>,
+): CheckResult<S> {
   let data: unknown;
   try {
     data = JSON.parse(text);
@@ -55,13 +69,13 @@ export function checkSessionText(file: string, text: string): CheckResult {
       problems: [{ file, path: "", message: `Not valid JSON: ${reason}` }],
     };
   }
-  return checkSessionData(file, data);
+  return checkSessionData(file, data, schema);
 }
 
 /** A session file must be named after its slug: orientation.json holds "orientation". */
 export function checkSlugMatchesFile(
   file: string,
-  session: Session,
+  session: SessionSummary,
 ): ContentProblem[] {
   const name = (file.split("/").pop() ?? file).replace(/\.json$/, "");
   return name === session.slug
@@ -77,7 +91,10 @@ export function checkSlugMatchesFile(
 
 /** Rules that span files: names match slugs, and no two sessions share a number. */
 export function checkSessionSet(
-  sessions: readonly { readonly file: string; readonly session: Session }[],
+  sessions: readonly {
+    readonly file: string;
+    readonly session: SessionSummary;
+  }[],
 ): ContentProblem[] {
   const problems: ContentProblem[] = [];
   const fileByNumber = new Map<number, string>();

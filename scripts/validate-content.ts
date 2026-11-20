@@ -4,7 +4,7 @@
 import type { Dirent } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { Session } from "../src/content/schema.ts";
+import { sessionSchema, type Session } from "../src/content/session-schema.ts";
 import {
   checkSessionSet,
   checkSessionText,
@@ -64,7 +64,7 @@ for (const entry of entries) {
     });
     continue;
   }
-  const result = checkSessionText(file, text);
+  const result = checkSessionText(file, text, sessionSchema);
   if (result.ok) sessions.push({ file, session: result.session });
   else problems.push(...result.problems);
 }
