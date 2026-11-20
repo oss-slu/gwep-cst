@@ -1,4 +1,7 @@
-/** A valid session object for tests; override any top-level field. */
+/**
+ * A valid session object for tests that use the test slide types in
+ * test-slides.ts; override any top-level field.
+ */
 export function validSession(
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> {
@@ -7,13 +10,18 @@ export function validSession(
     number: 9,
     title: "Fixture: Orientation",
     slides: [
-      { type: "title", id: "welcome", heading: "Fixture heading" },
+      { type: "test-text", id: "welcome", text: "Fixture text" },
       {
-        type: "reveal",
+        type: "test-media",
         id: "landmark-1",
+        notes: "Fixture facilitator note",
         image: {
           src: "/media/orientation/landmark-1.jpg",
           alt: "Fixture image description",
+        },
+        sound: {
+          src: "/media/orientation/birdsong.mp3",
+          description: "Fixture sound description",
         },
       },
     ],

@@ -56,11 +56,17 @@ async function inTempProject(
 }
 
 describe("validate-content", () => {
-  it("passes valid sessions", async () => {
-    const result = await runValidator(fixture("valid"));
-    expect(result.code).toBe(0);
-    expect(result.stdout).toContain("2 session files in content/sessions");
-    expect(result.stderr).toBe("");
+  it("rejects slides of unregistered types; there is no fallback schema", async () => {
+    // The production registry has no slide types until #8, so every slide is
+    // unknown. #8 restores a passing fixture and the cross-file CLI case.
+    const result = await runValidator(fixture("unregistered-types"));
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain(
+      `${SESSIONS}/childhood.json: slides[0].type: Unknown slide type "title". Registered types: none yet`,
+    );
+    expect(result.stderr).toContain(
+      `${SESSIONS}/orientation.json: slides[1].type: Unknown slide type "reveal"`,
+    );
   });
 
   it("reports every invalid field with its file and path", async () => {
@@ -70,7 +76,7 @@ describe("validate-content", () => {
     expect(result.stderr).toContain(`${file}: number: `);
     expect(result.stderr).toContain(`${file}: Unrecognized key: "titel"`);
     expect(result.stderr).toContain(
-      `${file}: slides[1].id: Slide id "welcome" is used more than once`,
+      `${file}: slides[0].type: Unknown slide type "title"`,
     );
   });
 
@@ -80,15 +86,6 @@ describe("validate-content", () => {
     expect(result.stderr).toMatch(
       /content\/sessions\/broken\.json: Not valid JSON: .*\(line 4 column 3\)/,
     );
-  });
-
-  it("reports problems across files", async () => {
-    const result = await runValidator(fixture("set-problems"));
-    expect(result.code).toBe(1);
-    expect(result.stderr).toContain(
-      `${SESSIONS}/copy.json: slug: Slug "orientation" must match the file name "copy"`,
-    );
-    expect(result.stderr).toContain("number: Session number 9 is also used by");
   });
 
   it("passes an existing empty folder", async () => {
@@ -141,7 +138,7 @@ describe("validate-content", () => {
       await mkdir(folder, { recursive: true });
       const target = join(project, "outside.txt");
       await copyFile(
-        join(fixture("valid"), SESSIONS, "orientation.json"),
+        join(fixture("unregistered-types"), SESSIONS, "orientation.json"),
         target,
       );
       await symlink(target, join(folder, "orientation.json"));

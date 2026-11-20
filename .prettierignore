@@ -6,3 +6,4 @@ package-lock.json
 *.md
 lighthouse-reports/
 tests/fixtures/sessions/malformed/
+public/admin/config.yml

@@ -45,6 +45,25 @@ export default tseslint.config(
     ...reactHooks.configs.flat.recommended,
   },
   {
+    // Build tooling (validate-content, CMS generation) must never reach the
+    // viewer bundle, so browser code may not import from scripts/.
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/scripts/**"],
+              message:
+                "Code in src/ runs in the browser; it must not import build scripts.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     rules: {
       "no-restricted-syntax": [
         "error",

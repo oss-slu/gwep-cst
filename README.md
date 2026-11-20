@@ -27,6 +27,8 @@ The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=
 | `npm test`          | Unit and component tests (Vitest)                             |
 | `npm run test:e2e`  | Browser and accessibility tests (Playwright with axe-core)    |
 | `npm run validate-content` | Check every file in `content/sessions/` against the content schema |
+| `npm run cms:generate` | Regenerate `public/admin/config.yml` from the slide registry |
+| `npm run cms:check` | Fail if `public/admin/config.yml` is out of date (runs in CI) |
 | `npm run check:bundle` | Fail if the initial JavaScript is over 100 kB gzip (run after `build`) |
 | `npm run check:lighthouse` | Lighthouse budgets, median of three mobile runs (run after `build`; needs Google Chrome) |
 
@@ -34,7 +36,13 @@ The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=
 
 Each session is one JSON file, `content/sessions/<slug>.json`, checked against the zod schema in `src/content/schema.ts`. `npm run validate-content` runs before every production build and in CI; any problem stops the build and is printed as `file: field.path: message`. The app loads a session only when it is opened, and checks it again with the same schema.
 
-Code in `src/content/` imports with explicit `.ts` extensions, because `scripts/validate-content.ts` runs it directly with Node.
+Slides are checked against the slide types registered in `src/slides/registry.ts`. Each slide type is one module made with `defineSlide()`: a strict schema, a lazily loaded component, and its CMS fields. A slide whose type is not registered, or that has fields its type does not define, fails validation. The production list is empty until the first slide types land, so for now every slide is rejected.
+
+Code in `src/content/` and `src/slides/` imports with explicit `.ts` extensions, because the scripts run it directly with Node. Slide modules are `.ts` files that load their component with `import()`, so Node never loads React components.
+
+## CMS config
+
+`public/admin/config.yml` is generated from the slide modules by `npm run cms:generate`; never edit it by hand. CI runs `npm run cms:check`, which fails if the committed file is out of date. The file is JSON, which is also valid YAML.
 
 ## Continuous integration
 

@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validSession } from "../../tests/support/session-fixture";
-import {
-  audioSchema,
-  baseSlideSchema,
-  imageSchema,
-  sessionSchema,
-} from "./schema.ts";
+import { testSessionSchema as sessionSchema } from "../../tests/support/test-slides";
+import { audioSchema, imageSchema } from "./schema.ts";
 
 function messages(result: {
   success: boolean;
@@ -14,7 +10,7 @@ function messages(result: {
   return result.error?.issues.map((issue) => issue.message) ?? [];
 }
 
-describe("sessionSchema", () => {
+describe("createSessionSchema (with the test slide types)", () => {
   it("accepts a valid session", () => {
     expect(sessionSchema.safeParse(validSession()).success).toBe(true);
   });
@@ -51,8 +47,8 @@ describe("sessionSchema", () => {
     const result = sessionSchema.safeParse(
       validSession({
         slides: [
-          { type: "title", id: "welcome" },
-          { type: "title", id: "welcome" },
+          { type: "test-text", id: "welcome", text: "One" },
+          { type: "test-text", id: "welcome", text: "Two" },
         ],
       }),
     );
@@ -60,31 +56,6 @@ describe("sessionSchema", () => {
     expect(messages(result)).toContain(
       'Slide id "welcome" is used more than once',
     );
-  });
-});
-
-describe("baseSlideSchema", () => {
-  it("requires a kebab-case id and type, and allows notes", () => {
-    expect(
-      baseSlideSchema.safeParse({
-        id: "day-1",
-        type: "calendar-day",
-        notes: "x",
-      }).success,
-    ).toBe(true);
-    expect(
-      baseSlideSchema.safeParse({ id: "Day 1", type: "calendar-day" }).success,
-    ).toBe(false);
-    expect(baseSlideSchema.safeParse({ type: "title" }).success).toBe(false);
-  });
-
-  it("lets type-specific fields through until the slide registry exists", () => {
-    const result = baseSlideSchema.safeParse({
-      id: "welcome",
-      type: "title",
-      heading: "Hi",
-    });
-    expect(result.data).toMatchObject({ heading: "Hi" });
   });
 });
 

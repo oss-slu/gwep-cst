@@ -64,39 +64,46 @@ export const audioSchema = z.strictObject({
 });
 
 /**
- * Fields every slide shares. Concrete slide types extend this schema; until
- * the slide registry exists, extra fields are allowed through.
+ * Fields every slide shares. Slide modules add these to their own strict
+ * schema through defineSlide() in src/slides/types.ts.
  */
-export const baseSlideSchema = z.looseObject({
+export const baseSlideShape = {
   id: kebabCase("Slide id"),
-  type: kebabCase("Slide type"),
   notes: z.string().optional(),
-});
+};
 
-export const sessionSchema = z
-  .strictObject({
-    slug: kebabCase("Session slug"),
-    number: z.int().min(1).max(14),
-    title: requiredText("Session title"),
-    slides: z
-      .array(baseSlideSchema)
-      .min(1, "A session needs at least one slide"),
-  })
-  .superRefine((session, ctx) => {
-    const seen = new Set<string>();
-    session.slides.forEach((slide, index) => {
-      if (seen.has(slide.id)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["slides", index, "id"],
-          message: `Slide id "${slide.id}" is used more than once`,
-        });
-      }
-      seen.add(slide.id);
+/** Builds the session schema around the slide check of a slide registry. */
+export function createSessionSchema<S extends { readonly id: string }>(
+  slideSchema: z.ZodType<S>,
+) {
+  return z
+    .strictObject({
+      slug: kebabCase("Session slug"),
+      number: z.int().min(1).max(14),
+      title: requiredText("Session title"),
+      slides: z.array(slideSchema).min(1, "A session needs at least one slide"),
+    })
+    .superRefine((session, ctx) => {
+      const seen = new Set<string>();
+      session.slides.forEach((slide, index) => {
+        if (seen.has(slide.id)) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["slides", index, "id"],
+            message: `Slide id "${slide.id}" is used more than once`,
+          });
+        }
+        seen.add(slide.id);
+      });
     });
-  });
+}
+
+export type SessionSchema<S extends { readonly id: string }> = ReturnType<
+  typeof createSessionSchema<S>
+>;
+export type SessionOf<S extends { readonly id: string }> = z.output<
+  SessionSchema<S>
+>;
 
 export type Image = z.infer<typeof imageSchema>;
 export type Audio = z.infer<typeof audioSchema>;
-export type BaseSlide = z.infer<typeof baseSlideSchema>;
-export type Session = z.infer<typeof sessionSchema>;

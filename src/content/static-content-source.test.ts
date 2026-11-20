@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { validSession } from "../../tests/support/session-fixture";
+import { testSessionSchema } from "../../tests/support/test-slides";
 import {
   AppError,
   ContentValidationError,
@@ -14,7 +15,10 @@ function sourceWith(sessions: Record<string, unknown>) {
       vi.fn(() => Promise.resolve(data)),
     ]),
   );
-  return { source: new StaticContentSource(loaders), loaders };
+  return {
+    source: new StaticContentSource({ loaders, schema: testSessionSchema }),
+    loaders,
+  };
 }
 
 describe("StaticContentSource", () => {
@@ -82,10 +86,44 @@ describe("StaticContentSource", () => {
     );
   });
 
+  it.each([
+    [
+      "an unregistered slide type",
+      { type: "calendar-day", id: "day" },
+      'slides[0].type: Unknown slide type "calendar-day". Registered types: test-text, test-media',
+    ],
+    [
+      "an unknown slide field",
+      { type: "test-text", id: "welcome", text: "Hi", colour: "red" },
+      'slides[0]: Unrecognized key: "colour"',
+    ],
+    [
+      "invalid image metadata",
+      {
+        type: "test-media",
+        id: "photo",
+        image: { src: "https://cdn.example.com/a.jpg", alt: "" },
+        sound: { src: "/media/orientation/a.mp3", description: "Birds" },
+      },
+      "slides[0].image.src: Image path must look like /media/<folder>/<file>",
+    ],
+  ])(
+    "rejects a session with %s when it loads",
+    async (_name, slide, message) => {
+      const { source } = sourceWith({
+        orientation: validSession({ slides: [slide] }),
+      });
+      await expect(source.loadSession("orientation")).rejects.toThrow(message);
+    },
+  );
+
   it("passes through a failed download", async () => {
     const source = new StaticContentSource({
-      "/content/sessions/orientation.json": () =>
-        Promise.reject(new Error("network down")),
+      loaders: {
+        "/content/sessions/orientation.json": () =>
+          Promise.reject(new Error("network down")),
+      },
+      schema: testSessionSchema,
     });
     await expect(source.loadSession("orientation")).rejects.toThrow(
       "network down",

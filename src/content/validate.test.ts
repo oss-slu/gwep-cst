@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validSession } from "../../tests/support/session-fixture";
-import type { Session } from "./schema.ts";
+import { testSessionSchema } from "../../tests/support/test-slides";
 import {
   checkSessionData,
   checkSessionSet,
@@ -12,12 +12,20 @@ const FILE = "content/sessions/orientation.json";
 
 describe("checkSessionText", () => {
   it("returns the parsed session for valid content", () => {
-    const result = checkSessionText(FILE, JSON.stringify(validSession()));
+    const result = checkSessionText(
+      FILE,
+      JSON.stringify(validSession()),
+      testSessionSchema,
+    );
     expect(result.ok && result.session.slug).toBe("orientation");
   });
 
   it("reports malformed JSON for the whole file", () => {
-    const result = checkSessionText(FILE, '{ "slug": "orientation", }');
+    const result = checkSessionText(
+      FILE,
+      '{ "slug": "orientation", }',
+      testSessionSchema,
+    );
     expect(result.ok).toBe(false);
     if (!result.ok) {
       const [problem, ...others] = result.problems;
@@ -36,10 +44,11 @@ describe("checkSessionData", () => {
       FILE,
       validSession({
         slides: [
-          { type: "title", id: "welcome" },
-          { type: "reveal", id: "Bad Id" },
+          { type: "test-text", id: "welcome", text: "One" },
+          { type: "test-text", id: "Bad Id", text: "Two" },
         ],
       }),
+      testSessionSchema,
     );
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -52,14 +61,13 @@ describe("checkSessionData", () => {
   it("reports a missing field", () => {
     const session = validSession();
     delete session.title;
-    const result = checkSessionData(FILE, session);
+    const result = checkSessionData(FILE, session, testSessionSchema);
     expect(!result.ok && result.problems[0]?.path).toBe("title");
   });
 });
 
 describe("checkSessionSet", () => {
-  const session = (slug: string, number: number): Session =>
-    ({ ...validSession(), slug, number }) as Session;
+  const session = (slug: string, number: number) => ({ slug, number });
 
   it("passes matching names and distinct numbers", () => {
     expect(
