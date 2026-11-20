@@ -8,6 +8,17 @@ import type { CmsField } from "./cms-field.ts";
 // their component with import(), so Node can read a module (for validation
 // and CMS generation) without loading React components.
 
+// Only defineSlide() can make a slide module. The brand makes a hand-built
+// object fail to compile, and definedModules catches one forced through with
+// a cast, so the registry can trust every module's schema and component.
+declare const slideModuleBrand: unique symbol;
+const definedModules = new WeakSet();
+
+/** True only for modules created by defineSlide(). */
+export function isDefinedSlideModule(module: object): boolean {
+  return definedModules.has(module);
+}
+
 /** Field names every slide already has; slide-specific fields cannot reuse them. */
 export const RESERVED_FIELDS = ["id", "type", "notes"] as const;
 type ReservedField = (typeof RESERVED_FIELDS)[number];
@@ -32,6 +43,7 @@ export interface SlideProps<S> {
 export type SlideComponent<S> = (props: SlideProps<S>) => ReactNode;
 
 export interface SlideModule<T extends string, S> {
+  readonly [slideModuleBrand]: true;
   readonly type: T;
   /** Name of the slide type shown to editors. */
   readonly label: string;
@@ -43,6 +55,7 @@ export interface SlideModule<T extends string, S> {
 
 /** Any slide module, with its slide type erased, for use in the registry. */
 export interface AnySlideModule {
+  readonly [slideModuleBrand]: true;
   readonly type: string;
   readonly label: string;
   readonly schema: z.ZodType<{ readonly id: string; readonly type: string }>;
@@ -78,6 +91,13 @@ export function defineSlide<const T extends string, F extends z.ZodRawShape>(
     );
   }
 
+  const duplicates = duplicateFieldNames(definition.cmsFields);
+  if (duplicates.length > 0) {
+    throw new Error(
+      `Slide type "${definition.type}": CMS field(s) defined more than once: ${duplicates.join(", ")}`,
+    );
+  }
+
   const cmsNames = definition.cmsFields.map((field) => field.name);
   const missing = fieldNames.filter((name) => !cmsNames.includes(name));
   const extra = cmsNames.filter((name) => !fieldNames.includes(name));
@@ -95,11 +115,32 @@ export function defineSlide<const T extends string, F extends z.ZodRawShape>(
     ...definition.fields,
   } as SlideShape<T, F>;
 
-  return {
+  const module = {
     type: definition.type,
     label: definition.label,
     schema: z.strictObject(shape),
     cmsFields: definition.cmsFields,
     loadComponent: definition.loadComponent,
   };
+  definedModules.add(module);
+  // The brand exists only in the type system; definedModules is its run-time
+  // counterpart.
+  return module as typeof module & { readonly [slideModuleBrand]: true };
+}
+
+/** Names used twice in a field list, checked in nested lists too ("image.alt"). */
+function duplicateFieldNames(
+  fields: readonly CmsField[],
+  prefix = "",
+): string[] {
+  const seen = new Set<string>();
+  const duplicates: string[] = [];
+  for (const field of fields) {
+    const name = `${prefix}${field.name}`;
+    if (seen.has(field.name)) duplicates.push(name);
+    seen.add(field.name);
+    if ("fields" in field)
+      duplicates.push(...duplicateFieldNames(field.fields, `${name}.`));
+  }
+  return duplicates;
 }

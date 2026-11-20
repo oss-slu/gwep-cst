@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { validSession } from "../../tests/support/session-fixture";
 import {
   testMediaSlide,
@@ -8,6 +9,7 @@ import {
 } from "../../tests/support/test-slides";
 import { sessionSchema } from "../content/session-schema.ts";
 import { createSlideRegistry, slideRegistry } from "./registry.ts";
+import type { AnySlideModule } from "./types.ts";
 
 function problems(result: {
   error?: { issues: { path: PropertyKey[]; message: string }[] };
@@ -73,6 +75,33 @@ describe("createSlideRegistry", () => {
     );
     expect(problems(result)[0]).toMatch(
       new RegExp(`^${path.replace(/\./g, "\\.")}: `),
+    );
+  });
+
+  // A plain object with a loose schema whose type differs from the module's.
+  const handBuilt = {
+    type: "test-text",
+    label: "Hand-built",
+    schema: z.looseObject({
+      id: z.string(),
+      type: z.literal("something-else"),
+    }),
+    cmsFields: [],
+    loadComponent: () => Promise.resolve({ default: () => null }),
+  };
+
+  it("does not compile with a module that was not made by defineSlide()", () => {
+    const attempt = () =>
+      // @ts-expect-error registry entries must come from defineSlide()
+      createSlideRegistry([handBuilt]);
+    expect(attempt).toBeTypeOf("function");
+  });
+
+  it("throws for a hand-built module forced through with a cast", () => {
+    expect(() =>
+      createSlideRegistry([handBuilt as unknown as AnySlideModule]),
+    ).toThrow(
+      'Slide type "test-text" was not created with defineSlide(); register only defined slide modules',
     );
   });
 

@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { AnySlideModule, SlideComponent } from "./types.ts";
+import {
+  isDefinedSlideModule,
+  type AnySlideModule,
+  type SlideComponent,
+} from "./types.ts";
 
 /** The validated slide data a module produces. */
 export type SlideOf<M extends AnySlideModule> = z.output<M["schema"]>;
@@ -25,6 +29,11 @@ export function createSlideRegistry<const M extends readonly AnySlideModule[]>(
 
   const byType = new Map<string, AnySlideModule>();
   for (const module of modules) {
+    if (!isDefinedSlideModule(module)) {
+      throw new Error(
+        `Slide type "${module.type}" was not created with defineSlide(); register only defined slide modules`,
+      );
+    }
     if (byType.has(module.type)) {
       throw new Error(
         `Slide type "${module.type}" is registered more than once`,

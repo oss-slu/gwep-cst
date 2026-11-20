@@ -113,6 +113,42 @@ describe("defineSlide at run time", () => {
     );
   });
 
+  it("throws when a CMS field name is used twice", () => {
+    expect(() =>
+      defineSlide({
+        type: "test-text",
+        label: "Text",
+        fields: { text: z.string() },
+        cmsFields: [textField, { ...textField, label: "Text again" }],
+        loadComponent,
+      }),
+    ).toThrow(
+      'Slide type "test-text": CMS field(s) defined more than once: text',
+    );
+  });
+
+  it("throws when a nested CMS field name is used twice", () => {
+    expect(() =>
+      defineSlide({
+        type: "test-text",
+        label: "Text",
+        fields: { photo: z.string() },
+        cmsFields: [
+          {
+            name: "photo",
+            label: "Photo",
+            widget: "object",
+            fields: [
+              { name: "alt", label: "Description", widget: "string" },
+              { name: "alt", label: "Description again", widget: "string" },
+            ],
+          },
+        ],
+        loadComponent,
+      }),
+    ).toThrow("CMS field(s) defined more than once: photo.alt");
+  });
+
   it("builds a strict schema with the shared fields and a literal type", () => {
     const module = defineSlide({
       type: "test-text",
