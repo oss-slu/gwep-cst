@@ -75,6 +75,8 @@ function measure(page: Page) {
 
     const texts = [...document.querySelectorAll(".slide h2, .slide p")];
     const width = document.documentElement.clientWidth;
+    const height = window.innerHeight;
+    const slide = document.querySelector(".slide")?.getBoundingClientRect();
     return {
       horizontalScroll: document.documentElement.scrollWidth > width,
       fitsViewport: document.documentElement.scrollHeight <= window.innerHeight,
@@ -88,7 +90,17 @@ function measure(page: Page) {
           fontSize: parseFloat(style.fontSize),
           contrast:
             (Math.max(fore, back) + 0.05) / (Math.min(fore, back) + 0.05),
-          insideViewport: box.left >= 0 && box.right <= width,
+          insideViewport:
+            box.left >= 0 &&
+            box.right <= width &&
+            box.top >= 0 &&
+            box.bottom <= height,
+          insideSlide:
+            slide !== undefined &&
+            box.left >= slide.left &&
+            box.right <= slide.right &&
+            box.top >= slide.top &&
+            box.bottom <= slide.bottom,
           clipped:
             element.scrollWidth > element.clientWidth ||
             element.scrollHeight > element.clientHeight,
@@ -107,6 +119,7 @@ function expectReadable(facts: Awaited<ReturnType<typeof measure>>) {
     expect(text.fontSize, text.text).toBeGreaterThanOrEqual(24);
     expect(text.contrast, text.text).toBeGreaterThanOrEqual(7);
     expect(text.insideViewport, text.text).toBe(true);
+    expect(text.insideSlide, text.text).toBe(true);
     expect(text.clipped, text.text).toBe(false);
   }
 }
@@ -170,14 +183,26 @@ test.describe("long supplied text on a phone", () => {
     test(`${name} wraps and stays fully visible`, async ({ page }) => {
       await open(page, slide);
       const facts = await measure(page);
+      // Every text element inside the viewport and the slide, on both axes,
+      // with no scrolling needed.
       expectReadable(facts);
-      const heading = page.getByRole("heading", { level: 2 });
-      const lineHeight = await heading.evaluate((element) =>
-        parseFloat(getComputedStyle(element).lineHeight),
-      );
-      const box = await heading.boundingBox();
-      // It wrapped onto several lines rather than overflowing one.
-      expect((box?.height ?? 0) / lineHeight).toBeGreaterThan(1.5);
+      expect(facts.fitsViewport).toBe(true);
+
+      // Each long text wrapped onto several lines rather than overflowing one.
+      const lines = await page
+        .locator(".slide h2, .slide .slide__text")
+        .evaluateAll((elements) =>
+          elements.map((element) => ({
+            text: element.textContent,
+            lines:
+              element.getBoundingClientRect().height /
+              parseFloat(getComputedStyle(element).lineHeight),
+          })),
+        );
+      expect(lines.length).toBe(name === "title and text" ? 2 : 1);
+      for (const line of lines) {
+        expect(line.lines, line.text).toBeGreaterThan(1.5);
+      }
     });
   }
 });
