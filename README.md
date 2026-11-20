@@ -25,6 +25,7 @@ The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=
 | `npm run format`    | Format files with Prettier                                    |
 | `npm run typecheck` | TypeScript check                                              |
 | `npm test`          | Unit and component tests (Vitest)                             |
+| `npm run test:timezones` | Calendar date tests, once per time zone, each in a process started with `TZ` set |
 | `npm run test:e2e`  | Browser and accessibility tests (Playwright with axe-core)    |
 | `npm run validate-content` | Check every file in `content/sessions/` against the content schema |
 | `npm run cms:generate` | Regenerate `public/admin/config.yml` from the slide registry |
@@ -36,7 +37,11 @@ The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=
 
 Each session is one JSON file, `content/sessions/<slug>.json`, checked against the zod schema in `src/content/schema.ts`. `npm run validate-content` runs before every production build and in CI; any problem stops the build and is printed as `file: field.path: message`. The app loads a session only when it is opened, and checks it again with the same schema.
 
-Slides are checked against the slide types registered in `src/slides/registry.ts`. Each slide type is one module made with `defineSlide()`: a strict schema, a lazily loaded component, and its CMS fields. A slide whose type is not registered, or that has fields its type does not define, fails validation. The production list is empty until the first slide types land, so for now every slide is rejected.
+Slides are checked against the slide types registered in `src/slides/registry.ts`. Each slide type is one module made with `defineSlide()`: a strict schema, a lazily loaded component, and its CMS fields. A slide whose type is not registered, or that has fields its type does not define, fails validation. The registered types are `title` (welcome and closing), `calendar-day`, `calendar-month` and `calendar-year`.
+
+The calendar slides show today's date as plain large text, with no marks around it. "Today" is read each time a calendar slide renders, from the current moment in the viewer's time zone (the facilitator's screen). A player left open overnight shows the new date the next time the slide renders. Tests pin the date with `TodayProvider`, and `npm run test:timezones` checks the unpinned path near midnight in several time zones.
+
+`tests/visual/slides.html` is a test-only page that renders one slide from its URL with a fixed date. The browser tests use it, through the Vite dev server, to check legibility, contrast and fit at phone, tablet and shared-screen sizes. It is never part of the production build.
 
 Code in `src/content/` and `src/slides/` imports with explicit `.ts` extensions, because the scripts run it directly with Node. Slide modules are `.ts` files that load their component with `import()`, so Node never loads React components.
 

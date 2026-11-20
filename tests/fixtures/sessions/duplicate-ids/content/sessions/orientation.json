@@ -1,0 +1,9 @@
+{
+  "slug": "orientation",
+  "number": 9,
+  "title": "Fixture: Orientation",
+  "slides": [
+    { "type": "calendar-day", "id": "day" },
+    { "type": "calendar-month", "id": "day" }
+  ]
+}

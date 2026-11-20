@@ -1,6 +1,6 @@
 import react from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import site from "./content/site.json" with { type: "json" };
 
 function escapeHtml(text: string): string {
@@ -30,6 +30,8 @@ export default defineConfig({
       "tests/unit/**/*.test.{ts,mjs}",
       "tests/node/**/*.test.ts",
     ],
+    // Time-zone tests need TZ set at process start: npm run test:timezones.
+    exclude: [...configDefaults.exclude, "**/*.tz.test.tsx"],
     setupFiles: ["src/test/setup.ts"],
   },
 });

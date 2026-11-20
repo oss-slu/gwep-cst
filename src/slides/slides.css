@@ -1,0 +1,52 @@
+/*
+ * Shared slide layout. Loaded only with slide components, never with the
+ * app shell. Sizes use rem and clamp(), so text scales with the browser
+ * setting and never drops below 24 px (AGENTS.md rules 1 and 2).
+ */
+.slide {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  min-height: 100%;
+  max-width: 100%;
+  padding: clamp(1rem, 4vw, 3rem);
+  text-align: center;
+  color: var(--color-text);
+}
+
+.slide__heading {
+  margin: 0;
+  max-width: 100%;
+  font-size: clamp(2rem, 1.5rem + 2.5vw, 3.5rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.slide__text {
+  margin: 0;
+  max-width: 40ch;
+  font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2.25rem);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* Calendar slides: plain large text only. No circles or other marks. */
+.calendar__value {
+  margin: 0;
+  font-size: clamp(2.75rem, 1.5rem + 7vw, 7rem);
+  font-weight: 700;
+  /* Room for the large glyphs, so they never spill into nearby text. */
+  line-height: 1.25;
+}
+
+.calendar__value--year {
+  font-size: clamp(4.5rem, 2.5rem + 13vw, 12rem);
+}
+
+.calendar__detail {
+  margin: 0;
+  font-size: clamp(1.75rem, 1.5rem + 1.5vw, 2.75rem);
+}

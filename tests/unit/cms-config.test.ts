@@ -5,6 +5,7 @@ import {
   buildCmsConfig,
   serializeCmsConfig,
 } from "../../scripts/cms/config.ts";
+import { slideRegistry } from "../../src/slides/registry.ts";
 import { testRegistry } from "../support/test-slides";
 
 type Config = ReturnType<typeof buildCmsConfig>;
@@ -70,7 +71,14 @@ describe("CMS config generation", () => {
     ]);
   });
 
-  it("has no slide types in production yet (provisional until #8)", () => {
-    expect(slideTypes(buildCmsConfig())).toEqual([]);
+  it("generates one slide type per production module, with its labels and hints", () => {
+    const types = slideTypes(buildCmsConfig());
+    expect(types.map((type) => [type.name, type.label])).toEqual(
+      slideRegistry.modules.map((module) => [module.type, module.label]),
+    );
+    for (const module of slideRegistry.modules) {
+      const type = types.find((candidate) => candidate.name === module.type);
+      expect(type?.fields.slice(2)).toEqual(module.cmsFields);
+    }
   });
 });
