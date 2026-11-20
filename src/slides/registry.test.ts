@@ -121,15 +121,38 @@ describe("createSlideRegistry", () => {
 });
 
 describe("the production registry", () => {
-  it("has no slide types yet, so every slide is rejected (provisional until #8)", () => {
-    expect(slideRegistry.modules).toEqual([]);
-    const result = sessionSchema.safeParse(
-      validSession({
-        slides: [{ type: "test-text", id: "welcome", text: "Hi" }],
-      }),
-    );
-    expect(problems(result)).toEqual([
-      'slides.0.type: Unknown slide type "test-text". Registered types: none yet',
+  it("registers the title and calendar slide types", () => {
+    expect(slideRegistry.modules.map((module) => module.type)).toEqual([
+      "title",
+      "calendar-day",
+      "calendar-month",
+      "calendar-year",
     ]);
+  });
+
+  it("accepts registered slides and rejects unregistered ones", () => {
+    const session = (slides: unknown[]) =>
+      sessionSchema.safeParse(validSession({ slides }));
+    expect(
+      session([
+        { type: "title", id: "welcome", heading: "Welcome" },
+        { type: "calendar-day", id: "day" },
+      ]).success,
+    ).toBe(true);
+    expect(problems(session([{ type: "reveal", id: "landmark-1" }]))).toEqual([
+      'slides.0.type: Unknown slide type "reveal". Registered types: title, calendar-day, calendar-month, calendar-year',
+    ]);
+  });
+
+  it("points at the field when registered slide data is invalid", () => {
+    expect(
+      problems(
+        sessionSchema.safeParse(
+          validSession({
+            slides: [{ type: "title", id: "welcome", heading: "" }],
+          }),
+        ),
+      ),
+    ).toEqual(["slides.0.heading: Heading must not be empty"]);
   });
 });

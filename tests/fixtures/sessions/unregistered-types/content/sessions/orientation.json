@@ -7,7 +7,6 @@
     {
       "type": "reveal",
       "id": "landmark-1",
-      "notes": "Fixture facilitator note",
       "image": {
         "src": "/media/orientation/landmark-1.jpg",
         "alt": "Fixture image description"

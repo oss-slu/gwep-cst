@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { calendarDaySlide } from "./calendar-day/index.ts";
+import { calendarMonthSlide } from "./calendar-month/index.ts";
+import { calendarYearSlide } from "./calendar-year/index.ts";
+import { titleSlide } from "./title/index.ts";
 import {
   isDefinedSlideModule,
   type AnySlideModule,
@@ -97,8 +101,12 @@ export function createSlideRegistry<const M extends readonly AnySlideModule[]>(
 }
 
 /**
- * The production slide types. Provisional: the list is empty until the first
- * slide modules land (#8). Until then every slide in a session is rejected as
- * an unknown type.
+ * The production slide types. A slide whose type is not listed here is
+ * rejected by validate-content and when the app loads a session.
  */
-export const slideRegistry = createSlideRegistry([]);
+export const slideRegistry = createSlideRegistry([
+  titleSlide,
+  calendarDaySlide,
+  calendarMonthSlide,
+  calendarYearSlide,
+]);

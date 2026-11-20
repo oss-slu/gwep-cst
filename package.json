@@ -20,7 +20,8 @@
     "check:lighthouse": "node scripts/check-lighthouse.mjs",
     "validate-content": "node scripts/validate-content.ts",
     "cms:generate": "node scripts/generate-cms-config.ts",
-    "cms:check": "node scripts/check-cms-config.ts"
+    "cms:check": "node scripts/check-cms-config.ts",
+    "test:timezones": "node scripts/test-timezones.ts"
   },
   "dependencies": {
     "react": "19.3.1",

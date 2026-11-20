@@ -52,7 +52,138 @@
           "label": "Slides",
           "widget": "list",
           "typeKey": "type",
-          "types": []
+          "types": [
+            {
+              "name": "title",
+              "label": "Title (welcome or closing)",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Heading",
+                  "widget": "string",
+                  "hint": "The large words on the slide, for example: Welcome to CST."
+                },
+                {
+                  "name": "subheading",
+                  "label": "Smaller text",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Optional. Shown under the heading."
+                }
+              ]
+            },
+            {
+              "name": "calendar-day",
+              "label": "Calendar: day of the week",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Question or words above the day",
+                  "widget": "string",
+                  "required": false,
+                  "hint": "Optional, for example: What day is it today? Leave empty for none."
+                }
+              ]
+            },
+            {
+              "name": "calendar-month",
+              "label": "Calendar: month",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Question or words above the month",
+                  "widget": "string",
+                  "required": false,
+                  "hint": "Optional, for example: What month is it today? Leave empty for none."
+                }
+              ]
+            },
+            {
+              "name": "calendar-year",
+              "label": "Calendar: year",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Question or words above the year",
+                  "widget": "string",
+                  "required": false,
+                  "hint": "Optional, for example: What year is it today? Leave empty for none."
+                }
+              ]
+            }
+          ]
         }
       ]
     }

@@ -1,6 +1,6 @@
 import react from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import site from "./content/site.json" with { type: "json" };
 
 function escapeHtml(text: string): string {
@@ -15,9 +15,12 @@ function escapeHtml(text: string): string {
 function siteTitle(): Plugin {
   return {
     name: "site-title",
-    transformIndexHtml: () => [
-      { tag: "title", children: escapeHtml(site.name), injectTo: "head" },
-    ],
+    // Pages that set their own <title> (such as the test-only slide preview)
+    // keep it, so no page ends up with two.
+    transformIndexHtml: (html) =>
+      /<title>/i.test(html)
+        ? []
+        : [{ tag: "title", children: escapeHtml(site.name), injectTo: "head" }],
   };
 }
 
@@ -30,6 +33,8 @@ export default defineConfig({
       "tests/unit/**/*.test.{ts,mjs}",
       "tests/node/**/*.test.ts",
     ],
+    // Time-zone tests need TZ set at process start: npm run test:timezones.
+    exclude: [...configDefaults.exclude, "**/*.tz.test.tsx"],
     setupFiles: ["src/test/setup.ts"],
   },
 });
