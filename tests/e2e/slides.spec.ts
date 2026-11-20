@@ -173,6 +173,12 @@ for (const viewport of viewports) {
   });
 }
 
+test("the preview page has its own single title", async ({ page }) => {
+  await open(page, slides.title);
+  await expect(page).toHaveTitle("Slide preview (test only)");
+  expect(await page.locator("head title").count()).toBe(1);
+});
+
 test.describe("long supplied text on a phone", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
