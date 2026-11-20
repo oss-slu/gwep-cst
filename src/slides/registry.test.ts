@@ -73,9 +73,7 @@ describe("createSlideRegistry", () => {
     const result = testSessionSchema.safeParse(
       validSession({ slides: [{ ...media, ...change }] }),
     );
-    expect(problems(result)[0]).toMatch(
-      new RegExp(`^${path.replace(/\./g, "\\.")}: `),
-    );
+    expect(problems(result)[0]?.startsWith(`${path}: `)).toBe(true);
   });
 
   // A plain object with a loose schema whose type differs from the module's.
