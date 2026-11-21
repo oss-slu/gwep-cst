@@ -18,7 +18,9 @@
 }
 
 .slide-image {
-  --image-max-height: 38vh;
+  /* A share of the screen's height, smaller on short screens such as
+     phones so the question, the button and a revealed answer still fit. */
+  --image-max-height: max(8rem, min(38vh, 100vh - 30rem));
   --fallback-width: 18rem;
   --fallback-height: 12rem;
   --picture-width: min(

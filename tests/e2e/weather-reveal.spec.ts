@@ -607,14 +607,14 @@ for (const viewport of viewports) {
       expect(chosen.shape).toBeCloseTo(1600 / 1200, 2);
     });
 
-    for (const slide of ["weather", "reveal"]) {
+    for (const slide of ["weather", "reveal", "reveal-narrow"]) {
       test(`${slide} fits, with large targets, readable text and no axe issues`, async ({
         page,
       }) => {
         await pictures(page);
         await open(page, slide);
-        if (slide === "reveal") {
-          await expect(page.getByAltText(ALT)).toBeVisible();
+        if (slide !== "weather") {
+          await expect(page.locator(".slide-image img")).toBeVisible();
           await revealButton(page).click();
           await expect(page.getByText("Fixture answer")).toBeVisible();
         }
@@ -630,6 +630,26 @@ for (const viewport of viewports) {
             pageScrolls: root.scrollHeight > window.innerHeight,
             slideScrolls:
               area !== null && area.scrollHeight > area.clientHeight + 1,
+            // Height left over in the slide area after its content. Text
+            // metrics differ between systems (CI runs on Linux), so the
+            // fixture must fit with room to spare, not exactly.
+            spareHeight: (() => {
+              const slideElement = document.querySelector(
+                ".player__slide .slide",
+              );
+              if (slideElement === null) return 0;
+              const style = getComputedStyle(slideElement);
+              const children = [...slideElement.children];
+              const used =
+                children.reduce(
+                  (sum, child) => sum + child.getBoundingClientRect().height,
+                  0,
+                ) +
+                parseFloat(style.paddingTop) +
+                parseFloat(style.paddingBottom) +
+                parseFloat(style.rowGap) * (children.length - 1);
+              return slideElement.clientHeight - used;
+            })(),
             targets: [...document.querySelectorAll("button, a, input")]
               .filter(visible)
               .map((element) => {
@@ -655,6 +675,7 @@ for (const viewport of viewports) {
         expect(facts.horizontalScroll).toBe(false);
         expect(facts.pageScrolls).toBe(false);
         expect(facts.slideScrolls).toBe(false);
+        expect(facts.spareHeight).toBeGreaterThanOrEqual(16);
         for (const target of facts.targets) {
           expect(target.width, target.name).toBeGreaterThanOrEqual(44);
           expect(target.height, target.name).toBeGreaterThanOrEqual(44);
