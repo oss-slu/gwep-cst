@@ -9,6 +9,7 @@ import { ErrorBoundary } from "../ui/ErrorBoundary.tsx";
 import { Loading } from "../ui/Loading.tsx";
 import { StatusMessage } from "../ui/StatusMessage.tsx";
 import type { AnySlide, PlayableSession, PlayerData } from "./player-data.ts";
+import { usePreloadSlide } from "./preload.ts";
 import { useSlideKeys } from "./slide-keys.ts";
 import "./player.css";
 
@@ -119,6 +120,7 @@ function Player<S extends AnySlide>({
   const keepFocus = useRef(false);
 
   const total = session.slides.length;
+  usePreloadSlide(data, session.slides[index + 1]);
   const position = format(ui.player.position, { current: index + 1, total });
 
   function goTo(target: number) {
@@ -263,11 +265,16 @@ function SlideContent<S extends AnySlide>({
   /** Runs once the slide's component has loaded and the slide is on screen. */
   readonly onShown: () => void;
 }) {
-  const Slide = use(data.loadComponent(slide));
+  // The effect runs only after the slide commits, so it may come first; the
+  // conditional use() below must stay last, after every other hook, so a
+  // suspended render replays its hooks in the same order.
   const shown = useEffectEvent(onShown);
   useEffect(() => {
     shown();
   }, []);
+  // A component that has already loaded (by an earlier slide of its type,
+  // or by the next-slide preload) renders at once, with no loading state.
+  const Slide = data.readyComponent(slide) ?? use(data.loadComponent(slide));
   // The component is not created here: it comes from a cache that holds one
   // per slide type, so it is the same on every render of this slide.
   // eslint-disable-next-line react-hooks/static-components

@@ -330,4 +330,63 @@ describe("session player", () => {
     expect(stop).toHaveBeenCalled();
     stop.mockRestore();
   });
+
+  it("preloads only the immediate next slide", async () => {
+    const preloaded: string[] = [];
+    const NativeImage = window.Image;
+    const spy = vi.spyOn(window, "Image").mockImplementation(function () {
+      const element = new NativeImage();
+      queueMicrotask(() => preloaded.push(element.getAttribute("src") ?? ""));
+      return element;
+    });
+    const media = (id: string) => ({
+      type: "test-media" as const,
+      id,
+      image: { src: `/media/o/${id}.png`, alt: id, width: 4, height: 3 },
+      sound: { src: `/media/o/${id}.mp3`, description: id },
+    });
+    const withPictures = {
+      ...session,
+      slides: [session.slides[0], media("two"), media("three")],
+    } as unknown as PlayableSession<Slide>;
+    await setup("/sessions/orientation/one", {
+      loadSession: () => Promise.resolve(withPictures),
+    });
+    await screen.findByText("Fixture slide one");
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(preloaded).toEqual(["/media/o/two.png"]);
+    spy.mockRestore();
+  });
+
+  it("shows a preloaded slide at once, without a loading state", async () => {
+    const media = {
+      type: "test-media" as const,
+      id: "two",
+      image: {
+        src: "/media/o/two.png",
+        alt: "Fixture picture two",
+        width: 4,
+        height: 3,
+      },
+      sound: { src: "/media/o/two.mp3", description: "two" },
+    };
+    const mixed = {
+      ...session,
+      slides: [session.slides[0], media],
+    } as unknown as PlayableSession<Slide>;
+    await setup("/sessions/orientation/one", {
+      loadSession: () => Promise.resolve(mixed),
+    });
+    await screen.findByText("Fixture slide one");
+    // Let the preload of slide two's (different) component finish.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    fireEvent.click(nextButton());
+    // Rendered in the same update: no "Loading…" in between.
+    expect(screen.getByAltText("Fixture picture two")).toBeDefined();
+    expect(screen.queryByText(ui.loading)).toBeNull();
+  });
 });

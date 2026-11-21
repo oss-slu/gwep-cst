@@ -84,6 +84,8 @@ beforeAll(async () => {
     picture(at("ok.webp"), ["-c:v", "libwebp"]),
     picture(at("ok.avif"), AVIF),
     picture(at("big.png")),
+    picture(at("half.png"), [], "32x24"), // same shape as ok.png
+    picture(at("squashed.png"), [], "32x30"),
     // Small files (well under 2 MB) that decode to 20 million pixels.
     picture(at("huge.png"), [], "5000x4000"),
     picture(at("huge.jpg"), [], "5000x4000"),
@@ -296,6 +298,53 @@ realMedia("validate-media with real files", () => {
       result.stderr,
     )?.[1];
     expect(Number(measured)).toBeGreaterThan(-15);
+  });
+
+  it("checks declared picture sizes and variants against the files", async () => {
+    const good = {
+      src: "/media/test/ok.png",
+      alt: "x",
+      width: 64,
+      height: 48,
+      variants: [{ src: "/media/test/half.png", width: 32 }],
+    };
+    const dir = await project(
+      {
+        "ok.png": "ok.png",
+        "half.png": "half.png",
+        "squashed.png": "squashed.png",
+      },
+      {
+        "orientation.json": {
+          slides: [
+            { image: good },
+            { image: { ...good, height: 40, variants: [] } },
+            {
+              image: {
+                ...good,
+                variants: [{ src: "/media/test/half.png", width: 30 }],
+              },
+            },
+            {
+              image: {
+                ...good,
+                variants: [{ src: "/media/test/squashed.png", width: 32 }],
+              },
+            },
+          ],
+        },
+      },
+    );
+    const result = await validate(dir);
+    expect(result.code).toBe(1);
+    const lines = result.stderr
+      .split("\n")
+      .filter((line) => line.startsWith("content/sessions/"));
+    expect(lines).toEqual([
+      "content/sessions/orientation.json: slides[1].image: /media/test/ok.png is 64 x 48, but the content says 64 x 40",
+      "content/sessions/orientation.json: slides[2].image.variants[0]: /media/test/half.png is 32 px wide, but the content says 30",
+      "content/sessions/orientation.json: slides[3].image.variants[0]: /media/test/squashed.png is 32 x 30, not the shape of /media/test/ok.png (64 x 48); expected about 32 x 24",
+    ]);
   });
 
   it("rejects a symbolic link and a folder at the wrong depth", async () => {

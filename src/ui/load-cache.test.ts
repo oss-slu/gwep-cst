@@ -33,4 +33,21 @@ describe("load cache", () => {
     cache.forgetFailures();
     expect(cache.get("a", () => Promise.resolve("other"))).toBe(kept);
   });
+
+  it("peek gives a finished value, and nothing while loading or after a failure", async () => {
+    const cache = createLoadCache<string>();
+    let resolve: (value: string) => void = () => undefined;
+    const pending = cache.get(
+      "a",
+      () => new Promise((done) => (resolve = done)),
+    );
+    expect(cache.peek("a")).toBeUndefined();
+    resolve("value");
+    await pending;
+    expect(cache.peek("a")).toBe("value");
+
+    const failed = cache.get("b", () => Promise.reject(new Error("offline")));
+    await expect(failed).rejects.toThrow("offline");
+    expect(cache.peek("b")).toBeUndefined();
+  });
 });

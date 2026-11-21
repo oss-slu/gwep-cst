@@ -2,7 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ui } from "../../app/copy.ts";
 import type { Image } from "../../content/schema.ts";
-import { SlideImage, srcSet } from "./SlideImage.tsx";
+import { SlideImage } from "./SlideImage.tsx";
+import { IMAGE_SIZES, srcSet } from "./sources.ts";
 
 const image: Image = {
   src: "/media/test/landmark.png",
@@ -41,7 +42,7 @@ describe("SlideImage", () => {
     );
     render(<SlideImage image={withVariants} />);
     expect(picture().getAttribute("srcset")).toBe(srcSet(withVariants));
-    expect(picture().getAttribute("sizes")).not.toBeNull();
+    expect(picture().getAttribute("sizes")).toBe(IMAGE_SIZES);
   });
 
   it("on failure shows the message, the description and a retry button", () => {

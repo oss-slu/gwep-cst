@@ -1,17 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ui } from "../../app/copy.ts";
 import type { Image } from "../../content/schema.ts";
+import { IMAGE_SIZES, srcSet } from "./sources.ts";
 import "./slide-image.css";
 
 type Status = "loading" | "loaded" | "failed" | "retrying";
-
-/** The image and its variants as a srcset, widest first: "/a.jpg 1600w, ...". */
-export function srcSet(image: Image): string {
-  return [{ src: image.src, width: image.width }, ...(image.variants ?? [])]
-    .sort((a, b) => b.width - a.width)
-    .map((entry) => `${entry.src} ${String(entry.width)}w`)
-    .join(", ");
-}
 
 /**
  * A slide picture. Its frame keeps the picture's shape from the content's
@@ -58,7 +51,7 @@ export function SlideImage({ image }: { readonly image: Image }) {
             }
             src={image.src}
             srcSet={image.variants === undefined ? undefined : srcSet(image)}
-            sizes="(min-width: 64rem) 50vw, 90vw"
+            sizes={IMAGE_SIZES}
             width={image.width}
             height={image.height}
             alt={image.alt}
