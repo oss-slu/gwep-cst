@@ -1,3 +1,46 @@
 {
-  "name": "Cognitive Stimulation Therapy"
+  "name": "Cognitive Stimulation Therapy",
+  "ui": {
+    "loading": "Loading…",
+    "backToSessions": "Back to sessions",
+    "sessionList": {
+      "heading": "Sessions",
+      "comingSoon": "Coming soon"
+    },
+    "player": {
+      "previous": "Previous",
+      "next": "Next",
+      "controls": "Slide controls",
+      "position": "Slide {current} of {total}"
+    },
+    "errors": {
+      "pageNotFound": {
+        "heading": "Page not found",
+        "text": "There is no page at this address."
+      },
+      "sessionNotFound": {
+        "heading": "Session not found",
+        "text": "There is no session at this address."
+      },
+      "sessionComingSoon": {
+        "heading": "Coming soon",
+        "text": "This session is not ready yet."
+      },
+      "slideNotFound": {
+        "heading": "Slide not found",
+        "text": "This session has no slide at this address.",
+        "firstSlide": "Go to the first slide"
+      },
+      "invalidContent": {
+        "heading": "This session can't be shown",
+        "text": "Something in its content needs fixing. Please tell the site maintainers."
+      },
+      "loadFailed": {
+        "heading": "This didn't load",
+        "text": "Check the internet connection, then try again.",
+        "retry": "Try again",
+        "reload": "Reload page"
+      }
+    }
+  }
 }

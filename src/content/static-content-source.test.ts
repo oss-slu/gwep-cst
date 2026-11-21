@@ -130,3 +130,33 @@ describe("StaticContentSource", () => {
     );
   });
 });
+
+describe("StaticContentSource file names", () => {
+  it("finds a session by file name in any folder", async () => {
+    const source = new StaticContentSource({
+      loaders: {
+        "/tests/fixtures/requests/sessions/orientation.json": () =>
+          Promise.resolve(validSession()),
+      },
+      schema: testSessionSchema,
+    });
+    await expect(source.loadSession("orientation")).resolves.toMatchObject({
+      slug: "orientation",
+    });
+  });
+
+  it("refuses two files with the same name", () => {
+    expect(
+      () =>
+        new StaticContentSource({
+          loaders: {
+            "/content/sessions/orientation.json": () => Promise.resolve({}),
+            "/tests/fixtures/orientation.json": () => Promise.resolve({}),
+          },
+          schema: testSessionSchema,
+        }),
+    ).toThrow(
+      "Session files /content/sessions/orientation.json and /tests/fixtures/orientation.json have the same name",
+    );
+  });
+});

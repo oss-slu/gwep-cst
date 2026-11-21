@@ -1,0 +1,38 @@
+{
+  "slug": "orientation",
+  "number": 9,
+  "title": "Orientation",
+  "slides": [
+    {
+      "type": "title",
+      "id": "welcome",
+      "heading": "Welcome to Orientation",
+      "subheading": "Placeholder session. The full Orientation session will replace it.",
+      "notes": "Placeholder for M0-06 (player and deep links). M0-09 replaces this file with the full Orientation demo session."
+    },
+    {
+      "type": "calendar-day",
+      "id": "day",
+      "heading": "What day is it today?",
+      "notes": "Placeholder, replaced in M0-09."
+    },
+    {
+      "type": "calendar-month",
+      "id": "month",
+      "heading": "What month is it?",
+      "notes": "Placeholder, replaced in M0-09."
+    },
+    {
+      "type": "calendar-year",
+      "id": "year",
+      "heading": "What year is it?",
+      "notes": "Placeholder, replaced in M0-09."
+    },
+    {
+      "type": "title",
+      "id": "closing",
+      "heading": "Thank you",
+      "notes": "Placeholder, replaced in M0-09."
+    }
+  ]
+}

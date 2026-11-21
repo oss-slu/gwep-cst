@@ -1,0 +1,32 @@
+{
+  "slug": "orientation",
+  "number": 3,
+  "title": "Fixture: Orientation",
+  "slides": [
+    {
+      "type": "title",
+      "id": "welcome",
+      "heading": "Fixture welcome"
+    },
+    {
+      "type": "calendar-day",
+      "id": "day",
+      "heading": "Fixture question"
+    },
+    {
+      "type": "calendar-month",
+      "id": "month"
+    },
+    {
+      "type": "calendar-year",
+      "id": "year",
+      "notes": "Fixture note"
+    },
+    {
+      "type": "title",
+      "id": "closing",
+      "heading": "Fixture closing",
+      "subheading": "Fixture text"
+    }
+  ]
+}

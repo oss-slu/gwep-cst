@@ -8,6 +8,7 @@ import {
   readdir,
   rm,
   symlink,
+  writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -124,6 +125,43 @@ describe("validate-content", () => {
     expect(result.stderr).toContain(
       `${SESSIONS}/orientation.json: number: Session number 9 is also used by ${SESSIONS}/copy.json`,
     );
+  });
+
+  it("checks the catalog against the session files", async () => {
+    const result = await runValidator(fixture("catalog-problems"));
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain(
+      `${SESSIONS}/orientation.json: number: Session number 3 does not match number 9 for "orientation" in content/catalog.json`,
+    );
+    expect(result.stderr).toContain(
+      'content/catalog.json: sessions[0].available: Session "childhood" is marked available but has no file childhood.json',
+    );
+  });
+
+  it("fails when the catalog is missing and names it", async () => {
+    await inTempProject(async (project) => {
+      await mkdir(join(project, SESSIONS), { recursive: true });
+      const result = await runValidator(project);
+      expect(result.code).toBe(1);
+      expect(result.stderr).toContain(
+        "content/catalog.json: Cannot read file: ENOENT",
+      );
+    });
+  });
+
+  it("reports catalog schema problems at their path", async () => {
+    await inTempProject(async (project) => {
+      await mkdir(join(project, SESSIONS), { recursive: true });
+      await writeFile(
+        join(project, "content/catalog.json"),
+        JSON.stringify({ sessions: [] }),
+      );
+      const result = await runValidator(project);
+      expect(result.code).toBe(1);
+      expect(result.stderr).toContain(
+        "content/catalog.json: sessions: The catalog must list all 14 sessions",
+      );
+    });
   });
 
   it("passes an existing empty folder", async () => {

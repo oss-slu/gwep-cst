@@ -24,8 +24,44 @@ function siteTitle(): Plugin {
   };
 }
 
-export default defineConfig({
-  plugins: [react(), siteTitle()],
+/**
+ * Test-only build mode (vite build --mode request-fixture). It adds the
+ * sessions in tests/fixtures/requests/sessions/ to the app's session loaders,
+ * so browser tests can show that opening one session never downloads
+ * another. It writes to its own folder, with a manifest the tests use to name
+ * each chunk. The production build never includes these files.
+ */
+const REQUEST_FIXTURE_MODE = "request-fixture";
+
+function requestFixtureSessions(): Plugin {
+  const pattern = '"/content/sessions/*.json"';
+  return {
+    name: "request-fixture-sessions",
+    enforce: "pre",
+    transform(code, id) {
+      if (!id.endsWith("/src/content/session-loaders.ts")) return;
+      if (!code.includes(pattern)) {
+        throw new Error(
+          `session-loaders.ts no longer uses the glob ${pattern}`,
+        );
+      }
+      return code.replace(
+        pattern,
+        `[${pattern}, "/tests/fixtures/requests/sessions/*.json"]`,
+      );
+    },
+  };
+}
+
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    react(),
+    siteTitle(),
+    ...(mode === REQUEST_FIXTURE_MODE ? [requestFixtureSessions()] : []),
+  ],
+  ...(mode === REQUEST_FIXTURE_MODE && {
+    build: { outDir: "dist-request-fixture", manifest: true },
+  }),
   test: {
     environment: "jsdom",
     include: [
@@ -37,4 +73,4 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, "**/*.tz.test.tsx"],
     setupFiles: ["src/test/setup.ts"],
   },
-});
+}));
