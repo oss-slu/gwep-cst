@@ -1,0 +1,12 @@
+/* Test-only: let a slide fill the whole viewport, as it will in the player. */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+main.preview {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 0;
+}

@@ -33,6 +33,7 @@ jobs:
       - run: npm run validate-content
       - run: npm run cms:check
       - run: npm test
+      - run: npm run test:timezones
       - run: npm run build
       - run: npm run check:bundle
 

@@ -1,0 +1,10 @@
+{
+  "slug": "orientation",
+  "number": 9,
+  "title": "Fixture: Orientation",
+  "slides": [
+    { "type": "title", "id": "welcome", "heading": "" },
+    { "type": "calendar-day", "id": "day", "date": "2026-11-20" },
+    { "type": "calendar-year", "id": "Year 1" }
+  ]
+}

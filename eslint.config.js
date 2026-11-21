@@ -6,6 +6,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist/",
+      "dist-request-fixture/",
       "coverage/",
       "test-results/",
       "playwright-report/",
@@ -43,6 +44,28 @@ export default tseslint.config(
   {
     files: ["**/*.{ts,tsx}"],
     ...reactHooks.configs.flat.recommended,
+  },
+  {
+    // Node code gets DOM types only so it can type-check the slide registry
+    // (see tsconfig.node.json). It runs in Node, so browser globals are errors.
+    files: ["scripts/**/*.ts", "tests/node/**/*.ts"],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        ...[
+          "window",
+          "document",
+          "navigator",
+          "location",
+          "localStorage",
+          "sessionStorage",
+          "HTMLElement",
+        ].map((name) => ({
+          name,
+          message: "Scripts run in Node; browser globals are not available.",
+        })),
+      ],
+    },
   },
   {
     // Build tooling (validate-content, CMS generation) must never reach the

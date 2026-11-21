@@ -18,22 +18,46 @@ export interface StaticContentSourceOptions<S extends SessionSummary> {
   readonly schema: z.ZodType<S>;
 }
 
-/** Loads sessions bundled with the site from content/sessions/<slug>.json. */
+interface SessionFile {
+  readonly file: string;
+  readonly load: () => Promise<unknown>;
+}
+
+/** The name of a session file without its folder and extension: "orientation". */
+function fileName(file: string): string {
+  return (file.split("/").pop() ?? file).replace(/\.json$/, "");
+}
+
+/**
+ * Loads sessions bundled with the site, such as content/sessions/<slug>.json.
+ * Sessions are found by file name, so a test-only build can add a folder.
+ */
 export class StaticContentSource<
   S extends SessionSummary,
 > implements ContentSource<S> {
-  readonly #loaders: SessionLoaders;
+  readonly #files: ReadonlyMap<string, SessionFile>;
   readonly #schema: z.ZodType<S>;
 
   constructor({ loaders, schema }: StaticContentSourceOptions<S>) {
-    this.#loaders = loaders;
+    const files = new Map<string, SessionFile>();
+    for (const [file, load] of Object.entries(loaders)) {
+      const name = fileName(file);
+      const other = files.get(name);
+      if (other !== undefined) {
+        throw new Error(
+          `Session files ${other.file} and ${file} have the same name`,
+        );
+      }
+      files.set(name, { file, load });
+    }
+    this.#files = files;
     this.#schema = schema;
   }
 
   async loadSession(slug: string): Promise<S> {
-    const file = `/content/sessions/${slug}.json`;
-    const load = SLUG.test(slug) ? this.#loaders[file] : undefined;
-    if (load === undefined) throw new SessionNotFoundError(slug);
+    const found = SLUG.test(slug) ? this.#files.get(slug) : undefined;
+    if (found === undefined) throw new SessionNotFoundError(slug);
+    const { file, load } = found;
 
     const result = checkSessionData(file, await load(), this.#schema);
     if (!result.ok) throw new ContentValidationError(result.problems);

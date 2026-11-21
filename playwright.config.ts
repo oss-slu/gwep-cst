@@ -1,6 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = 4173;
+const previewPort = 4175;
+const requestFixturePort = 4177;
 
 // Tests run against the production build, so they check what ships.
 export default defineConfig({
@@ -10,9 +12,25 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
   use: { baseURL: `http://localhost:${String(port)}` },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    command: `npm run build && npm run preview -- --port ${String(port)} --strictPort`,
-    url: `http://localhost:${String(port)}`,
-    reuseExistingServer: false,
-  },
+  webServer: [
+    {
+      command: `npm run build && npm run preview -- --port ${String(port)} --strictPort`,
+      url: `http://localhost:${String(port)}`,
+      reuseExistingServer: false,
+    },
+    {
+      // Test-only slide preview page (tests/visual), served by the dev server
+      // and never part of the production build.
+      command: `npm run dev -- --port ${String(previewPort)} --strictPort`,
+      url: `http://localhost:${String(previewPort)}/tests/visual/slides.html`,
+      reuseExistingServer: false,
+    },
+    {
+      // Test-only production build with a second session (see the
+      // request-fixture mode in vite.config.ts), for the download tests.
+      command: `npx vite build --mode request-fixture && npx vite preview --mode request-fixture --port ${String(requestFixturePort)} --strictPort`,
+      url: `http://localhost:${String(requestFixturePort)}`,
+      reuseExistingServer: false,
+    },
+  ],
 });

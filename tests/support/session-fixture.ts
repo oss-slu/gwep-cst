@@ -18,6 +18,8 @@ export function validSession(
         image: {
           src: "/media/orientation/landmark-1.jpg",
           alt: "Fixture image description",
+          width: 1600,
+          height: 1200,
         },
         sound: {
           src: "/media/orientation/birdsong.mp3",

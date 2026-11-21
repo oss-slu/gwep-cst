@@ -113,3 +113,63 @@ export function checkSessionSet(
   }
   return problems;
 }
+
+/** The catalog fields the checks across files rely on. */
+export interface CatalogSummary {
+  readonly sessions: readonly {
+    readonly number: number;
+    readonly slug: string;
+    readonly available: boolean;
+  }[];
+}
+
+/**
+ * Rules between the catalog and the session files: every session file is
+ * listed in the catalog under the same number, and every session marked
+ * available has a file. A file for a session that is not yet available is
+ * allowed (work in progress); the app never loads it.
+ */
+export function checkCatalogAgainstSessions(
+  catalogFile: string,
+  catalog: CatalogSummary,
+  sessionFiles: readonly string[],
+  sessions: readonly {
+    readonly file: string;
+    readonly session: SessionSummary;
+  }[],
+): ContentProblem[] {
+  const problems: ContentProblem[] = [];
+  const bySlug = new Map(catalog.sessions.map((entry) => [entry.slug, entry]));
+  for (const { file, session } of sessions) {
+    const entry = bySlug.get(session.slug);
+    if (entry === undefined) {
+      problems.push({
+        file,
+        path: "slug",
+        message: `Session "${session.slug}" is not listed in ${catalogFile}`,
+      });
+    } else if (entry.number !== session.number) {
+      problems.push({
+        file,
+        path: "number",
+        message: `Session number ${String(session.number)} does not match number ${String(entry.number)} for "${session.slug}" in ${catalogFile}`,
+      });
+    }
+  }
+
+  const fileNames = new Set(
+    sessionFiles.map((file) =>
+      (file.split("/").pop() ?? file).replace(/\.json$/, ""),
+    ),
+  );
+  catalog.sessions.forEach((entry, index) => {
+    if (entry.available && !fileNames.has(entry.slug)) {
+      problems.push({
+        file: catalogFile,
+        path: `sessions[${String(index)}].available`,
+        message: `Session "${entry.slug}" is marked available but has no file ${entry.slug}.json`,
+      });
+    }
+  });
+  return problems;
+}

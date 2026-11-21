@@ -61,26 +61,31 @@ describe("createSessionSchema (with the test slide types)", () => {
 
 describe("imageSchema", () => {
   const src = "/media/orientation/landmark-1.webp";
+  const size = { width: 1600, height: 1200 };
 
   it("accepts an image with alt text", () => {
     expect(
-      imageSchema.safeParse({ src, alt: "A lighthouse on a cliff" }).success,
+      imageSchema.safeParse({ src, alt: "A lighthouse on a cliff", ...size })
+        .success,
     ).toBe(true);
   });
 
   it("requires alt text unless the image is decorative", () => {
-    expect(messages(imageSchema.safeParse({ src, alt: " " }))).toEqual([
-      "Alt text is required unless the image is marked decorative",
-    ]);
-    expect(imageSchema.safeParse({ src }).success).toBe(false);
+    expect(messages(imageSchema.safeParse({ src, alt: " ", ...size }))).toEqual(
+      ["Alt text is required unless the image is marked decorative"],
+    );
+    expect(imageSchema.safeParse({ src, ...size }).success).toBe(false);
   });
 
   it("requires empty alt text on a decorative image", () => {
     expect(
-      imageSchema.safeParse({ src, alt: "", decorative: true }).success,
+      imageSchema.safeParse({ src, alt: "", decorative: true, ...size })
+        .success,
     ).toBe(true);
     expect(
-      messages(imageSchema.safeParse({ src, alt: "Swirl", decorative: true })),
+      messages(
+        imageSchema.safeParse({ src, alt: "Swirl", decorative: true, ...size }),
+      ),
     ).toEqual(["A decorative image must have empty alt text"]);
   });
 
@@ -92,8 +97,74 @@ describe("imageSchema", () => {
     ["an unsupported type", "/media/orientation/a.gif"],
     ["a script file", "/media/orientation/a.js"],
     ["a missing folder", "/media/a.jpg"],
+    [
+      "a comma, which could add srcset entries",
+      "/media/orientation/a.jpg,/x.jpg",
+    ],
+    ["a space", "/media/orientation/a b.jpg"],
   ])("rejects %s", (_name, path) => {
-    expect(imageSchema.safeParse({ src: path, alt: "x" }).success).toBe(false);
+    expect(
+      imageSchema.safeParse({ src: path, alt: "x", ...size }).success,
+    ).toBe(false);
+    expect(
+      imageSchema.safeParse({
+        src,
+        alt: "x",
+        ...size,
+        variants: [{ src: path, width: 800 }],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires a positive whole-number width and height", () => {
+    expect(
+      messages(
+        imageSchema.safeParse({ src, alt: "x", width: 0, height: 10.5 }),
+      ),
+    ).toEqual([
+      "Image width must be more than 0",
+      "Image height must be a whole number of pixels",
+    ]);
+    expect(imageSchema.safeParse({ src, alt: "x", width: 10 }).success).toBe(
+      false,
+    );
+  });
+
+  it("accepts variants with unique positive widths", () => {
+    expect(
+      imageSchema.safeParse({
+        src,
+        alt: "x",
+        ...size,
+        variants: [
+          { src: "/media/orientation/landmark-1-800.webp", width: 800 },
+          { src: "/media/orientation/landmark-1-400.webp", width: 400 },
+        ],
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects a repeated or invalid variant width, reporting each one", () => {
+    const result = imageSchema.safeParse({
+      src,
+      alt: "x",
+      ...size,
+      variants: [
+        { src: "/media/orientation/a-800.webp", width: 800 },
+        { src: "/media/orientation/b-800.webp", width: 800 },
+        { src: "/media/orientation/c.webp", width: 1600 },
+        { src: "/media/orientation/d.webp", width: -1 },
+      ],
+    });
+    expect(
+      result.error?.issues.map(
+        (issue) => `${issue.path.join(".")}: ${issue.message}`,
+      ),
+    ).toEqual([
+      "variants.3.width: Variant width must be more than 0",
+      "variants.1.width: Width 800 is already used by this image or another variant",
+      "variants.2.width: Width 1600 is already used by this image or another variant",
+    ]);
   });
 });
 

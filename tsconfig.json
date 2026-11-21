@@ -23,8 +23,10 @@
     "tests/e2e",
     "tests/unit",
     "tests/support",
+    "tests/visual",
     "content",
     "vite.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "vitest.timezones.config.ts"
   ]
 }

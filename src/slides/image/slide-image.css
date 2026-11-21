@@ -1,0 +1,84 @@
+/*
+ * The frame's size comes only from the content's width and height, never
+ * from what has loaded, so the slide does not shift when the picture
+ * arrives, fails or loads again.
+ *
+ * --picture-width is the picture's displayed width: at most the slide's
+ * width, the file's own width, and what fits in a share of the screen's
+ * height. The frame is at least that picture and at least big enough for
+ * the "didn't load" message and its button, so a narrow or tall picture
+ * still leaves room for them. The picture is drawn inside at its own shape.
+ */
+.slide-image-area {
+  container-type: inline-size;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.slide-image {
+  /* A share of the screen's height, smaller on short screens such as
+     phones so the question, the button and a revealed answer still fit. */
+  --image-max-height: max(8rem, min(38vh, 100vh - 30rem));
+  --fallback-width: 18rem;
+  --fallback-height: 12rem;
+  --picture-width: min(
+    100cqi,
+    var(--image-width),
+    calc(var(--image-max-height) * var(--image-shape))
+  );
+  position: relative;
+  box-sizing: border-box;
+  width: max(min(100cqi, var(--fallback-width)), var(--picture-width));
+  height: max(
+    var(--fallback-height),
+    calc(var(--picture-width) / var(--image-shape))
+  );
+}
+
+.slide-image__picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* A retry that is still loading stays under the failure message. */
+.slide-image__picture--pending {
+  opacity: 0;
+}
+
+/*
+ * The message and the button come first, so they are always inside the
+ * reserved space. A long description follows and scrolls within the panel
+ * if it needs more room; "safe" keeps the top in view when it overflows.
+ */
+.slide-image__failed {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  overflow: auto;
+  border: 4px dashed var(--color-muted);
+  border-radius: 0.5rem;
+  background: var(--color-background);
+  text-align: center;
+}
+
+.slide-image__message,
+.slide-image__alt {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.slide-image__alt {
+  font-weight: 600;
+}

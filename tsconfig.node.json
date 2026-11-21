@@ -1,8 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "lib": ["ES2022"],
-    "types": ["node"]
+    // DOM types are here only because scripts load the slide registry, whose
+    // lazy component imports TypeScript also checks. Scripts themselves may
+    // not use browser globals: eslint.config.js forbids them in this project.
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "vite/client"]
   },
   "include": ["scripts/**/*.ts", "tests/node/**/*.ts"]
 }

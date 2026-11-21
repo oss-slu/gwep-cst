@@ -52,7 +52,279 @@
           "label": "Slides",
           "widget": "list",
           "typeKey": "type",
-          "types": []
+          "types": [
+            {
+              "name": "title",
+              "label": "Title (welcome or closing)",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Heading",
+                  "widget": "string",
+                  "hint": "The large words on the slide, for example: Welcome to CST."
+                },
+                {
+                  "name": "subheading",
+                  "label": "Smaller text",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Optional. Shown under the heading."
+                }
+              ]
+            },
+            {
+              "name": "calendar-day",
+              "label": "Calendar: day of the week",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Question or words above the day",
+                  "widget": "string",
+                  "required": false,
+                  "hint": "Optional, for example: What day is it today? Leave empty for none."
+                }
+              ]
+            },
+            {
+              "name": "calendar-month",
+              "label": "Calendar: month",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Question or words above the month",
+                  "widget": "string",
+                  "required": false,
+                  "hint": "Optional, for example: What month is it today? Leave empty for none."
+                }
+              ]
+            },
+            {
+              "name": "calendar-year",
+              "label": "Calendar: year",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Question or words above the year",
+                  "widget": "string",
+                  "required": false,
+                  "hint": "Optional, for example: What year is it today? Leave empty for none."
+                }
+              ]
+            },
+            {
+              "name": "weather",
+              "label": "Weather: thermometer",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Question",
+                  "widget": "string",
+                  "hint": "The words above the thermometer, for example: What is the weather like today?"
+                },
+                {
+                  "name": "levels",
+                  "label": "Thermometer levels, coldest first",
+                  "widget": "list",
+                  "hint": "Between 2 and 7 plain words, from coldest to hottest, for example: Cold, Mild, Hot.",
+                  "fields": [
+                    {
+                      "name": "label",
+                      "label": "Words",
+                      "widget": "string"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "reveal",
+              "label": "Reveal: picture with a hidden answer",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "prompt",
+                  "label": "Question",
+                  "widget": "string",
+                  "hint": "Shown above the picture, for example: What state is the famous landmark located?"
+                },
+                {
+                  "name": "image",
+                  "label": "Picture",
+                  "widget": "object",
+                  "fields": [
+                    {
+                      "name": "src",
+                      "label": "Picture",
+                      "widget": "image"
+                    },
+                    {
+                      "name": "alt",
+                      "label": "Picture description",
+                      "widget": "string",
+                      "required": false,
+                      "hint": "Describe the picture for someone who cannot see it. Leave empty only if the picture is decorative."
+                    },
+                    {
+                      "name": "decorative",
+                      "label": "Decorative picture",
+                      "widget": "boolean",
+                      "required": false,
+                      "hint": "Tick only if the picture adds nothing to the meaning of the slide."
+                    },
+                    {
+                      "name": "width",
+                      "label": "Picture width in pixels",
+                      "widget": "number",
+                      "value_type": "int",
+                      "min": 1,
+                      "hint": "The width of the picture file, so the page can save its space while it loads."
+                    },
+                    {
+                      "name": "height",
+                      "label": "Picture height in pixels",
+                      "widget": "number",
+                      "value_type": "int",
+                      "min": 1
+                    },
+                    {
+                      "name": "variants",
+                      "label": "Smaller copies (optional)",
+                      "widget": "list",
+                      "required": false,
+                      "hint": "The same picture saved at other widths, with the same shape. Phones then download a smaller file.",
+                      "fields": [
+                        {
+                          "name": "src",
+                          "label": "Picture",
+                          "widget": "image"
+                        },
+                        {
+                          "name": "width",
+                          "label": "Width in pixels",
+                          "widget": "number",
+                          "value_type": "int",
+                          "min": 1
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "answer",
+                  "label": "Answer",
+                  "widget": "text",
+                  "hint": "Hidden until the facilitator presses Reveal answer."
+                }
+              ]
+            }
+          ]
         }
       ]
     }

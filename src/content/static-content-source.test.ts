@@ -102,7 +102,12 @@ describe("StaticContentSource", () => {
       {
         type: "test-media",
         id: "photo",
-        image: { src: "https://cdn.example.com/a.jpg", alt: "" },
+        image: {
+          src: "https://cdn.example.com/a.jpg",
+          alt: "",
+          width: 4,
+          height: 3,
+        },
         sound: { src: "/media/orientation/a.mp3", description: "Birds" },
       },
       "slides[0].image.src: Image path must look like /media/<folder>/<file>",
@@ -127,6 +132,36 @@ describe("StaticContentSource", () => {
     });
     await expect(source.loadSession("orientation")).rejects.toThrow(
       "network down",
+    );
+  });
+});
+
+describe("StaticContentSource file names", () => {
+  it("finds a session by file name in any folder", async () => {
+    const source = new StaticContentSource({
+      loaders: {
+        "/tests/fixtures/requests/sessions/orientation.json": () =>
+          Promise.resolve(validSession()),
+      },
+      schema: testSessionSchema,
+    });
+    await expect(source.loadSession("orientation")).resolves.toMatchObject({
+      slug: "orientation",
+    });
+  });
+
+  it("refuses two files with the same name", () => {
+    expect(
+      () =>
+        new StaticContentSource({
+          loaders: {
+            "/content/sessions/orientation.json": () => Promise.resolve({}),
+            "/tests/fixtures/orientation.json": () => Promise.resolve({}),
+          },
+          schema: testSessionSchema,
+        }),
+    ).toThrow(
+      "Session files /content/sessions/orientation.json and /tests/fixtures/orientation.json have the same name",
     );
   });
 });

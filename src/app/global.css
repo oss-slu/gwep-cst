@@ -6,6 +6,11 @@
   --color-text: #1a1a1a;
   --color-background: #ffffff;
   --color-focus: #0b4f9c;
+  /* Buttons and links: 8:1 against white. */
+  --color-action: #0b4f9c;
+  --color-on-action: #ffffff;
+  /* Borders and disabled controls: 7:1 against white. */
+  --color-muted: #595959;
   font-family: system-ui, sans-serif;
   line-height: 1.5;
   color: var(--color-text);
@@ -29,6 +34,15 @@ h1 {
 :focus-visible {
   outline: 4px solid var(--color-focus);
   outline-offset: 2px;
+}
+
+/*
+ * Headings and the slide area take focus from code after navigation, so
+ * screen readers announce the new place. They are not controls, so they get
+ * no focus ring; every control keeps its ring.
+ */
+[tabindex="-1"]:focus {
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

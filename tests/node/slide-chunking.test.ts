@@ -14,7 +14,7 @@ const testSlidesModule = path("../support/test-slides.ts");
 const MARKER = "TEST_TEXT_SLIDE_COMPONENT";
 const ENTRY = "\0slide-entry";
 
-async function buildEntry(): Promise<Rolldown.OutputChunk[]> {
+async function buildEntry(entryCode: string): Promise<Rolldown.OutputChunk[]> {
   const output = await build({
     root: path("../fixtures/chunking"),
     configFile: false,
@@ -24,15 +24,7 @@ async function buildEntry(): Promise<Rolldown.OutputChunk[]> {
       {
         name: "slide-entry",
         resolveId: (id) => (id === "slide-entry" ? ENTRY : undefined),
-        load: (id) =>
-          id === ENTRY
-            ? [
-                `import { createSlideRegistry } from ${JSON.stringify(registryModule)};`,
-                `import { testTextSlide } from ${JSON.stringify(testSlidesModule)};`,
-                `const registry = createSlideRegistry([testTextSlide]);`,
-                `globalThis.render = () => registry.loadComponent({ type: "test-text", id: "welcome", text: "Hi" });`,
-              ].join("\n")
-            : undefined,
+        load: (id) => (id === ENTRY ? entryCode : undefined),
       },
     ],
     build: {
@@ -69,7 +61,14 @@ function staticClosure(
 
 describe("slide components in the production build", () => {
   it("are reached only through a dynamic import, never from the entry's static graph", async () => {
-    const chunks = await buildEntry();
+    const chunks = await buildEntry(
+      [
+        `import { createSlideRegistry } from ${JSON.stringify(registryModule)};`,
+        `import { testTextSlide } from ${JSON.stringify(testSlidesModule)};`,
+        `const registry = createSlideRegistry([testTextSlide]);`,
+        `globalThis.render = () => registry.loadComponent({ type: "test-text", id: "welcome", text: "Hi" });`,
+      ].join("\n"),
+    );
     const byName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
     const entry = chunks.find((chunk) => chunk.isEntry);
     const component = chunks.filter((chunk) => chunk.code.includes(MARKER));
@@ -88,5 +87,36 @@ describe("slide components in the production build", () => {
       (name) => byName.get(name)?.dynamicImports ?? [],
     );
     expect(dynamicTargets).toContain(componentFile);
+  });
+
+  it("keeps every production slide component out of the entry's static graph", async () => {
+    const chunks = await buildEntry(
+      [
+        `import { slideRegistry } from ${JSON.stringify(registryModule)};`,
+        `globalThis.render = (slide) => slideRegistry.loadComponent(slide);`,
+      ].join("\n"),
+    );
+    const byName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
+    const entry = chunks.find((chunk) => chunk.isEntry);
+    if (entry === undefined)
+      throw new Error("The build produced no entry chunk");
+    const loadedUpFront = staticClosure(entry, byName);
+    const dynamicTargets = [...loadedUpFront].flatMap(
+      (name) => byName.get(name)?.dynamicImports ?? [],
+    );
+
+    for (const type of [
+      "title",
+      "calendar-day",
+      "calendar-month",
+      "calendar-year",
+    ]) {
+      const file = path(`../../src/slides/${type}/Component.tsx`);
+      const holders = chunks.filter((chunk) => chunk.moduleIds.includes(file));
+      expect(holders, type).toHaveLength(1);
+      const componentChunk = holders[0]?.fileName ?? "";
+      expect(loadedUpFront.has(componentChunk), type).toBe(false);
+      expect(dynamicTargets, type).toContain(componentChunk);
+    }
   });
 });
