@@ -17,7 +17,7 @@ concurrency:
 jobs:
   checks:
     name: checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -28,9 +28,19 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # FFmpeg checks media at build time (scripts/validate-media.ts):
+      # Ubuntu's package, which gets security updates. The versions used are
+      # logged here and again by validate-media.
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+          ffmpeg -hide_banner -version | head -n 1
+          ffprobe -hide_banner -version | head -n 1
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run validate-content
+      - run: npm run validate-media
       - run: npm run cms:check
       - run: npm test
       - run: npm run test:timezones
@@ -39,7 +49,7 @@ jobs:
 
   e2e:
     name: e2e
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,6 +60,15 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # FFmpeg checks media at build time (scripts/validate-media.ts):
+      # Ubuntu's package, which gets security updates. The versions used are
+      # logged here and again by validate-media.
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+          ffmpeg -hide_banner -version | head -n 1
+          ffprobe -hide_banner -version | head -n 1
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - if: failure()
@@ -75,7 +94,7 @@ jobs:
 
   lighthouse:
     name: lighthouse
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -86,6 +105,15 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # FFmpeg checks media at build time (scripts/validate-media.ts):
+      # Ubuntu's package, which gets security updates. The versions used are
+      # logged here and again by validate-media.
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+          ffmpeg -hide_banner -version | head -n 1
+          ffprobe -hide_banner -version | head -n 1
       - run: npm run build
       # Uses the Google Chrome preinstalled on the runner.
       - run: npm run check:lighthouse
