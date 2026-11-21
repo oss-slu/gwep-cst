@@ -5,6 +5,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "../../src/app/global.css";
 import "./preview.css";
+import { AudioProvider } from "../../src/media/AudioProvider.tsx";
 import { TodayProvider } from "../../src/slides/calendar/today.tsx";
 import { slideRegistry } from "../../src/slides/registry.ts";
 
@@ -27,9 +28,11 @@ if (!parsed.success) {
   createRoot(root).render(
     <StrictMode>
       <TodayProvider date={{ year, month, day }}>
-        <main className="preview">
-          <Slide slide={slide} />
-        </main>
+        <AudioProvider>
+          <main className="preview">
+            <Slide slide={slide} />
+          </main>
+        </AudioProvider>
       </TodayProvider>
     </StrictMode>,
   );

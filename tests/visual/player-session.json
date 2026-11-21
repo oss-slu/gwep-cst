@@ -77,6 +77,31 @@
       "answer": "Fixture answer"
     },
     {
+      "type": "sounds",
+      "id": "sounds",
+      "heading": "Fixture: what can you hear?",
+      "clips": [
+        {
+          "sound": {
+            "src": "/media/test/sound-short.mp3",
+            "description": "Fixture short sound"
+          }
+        },
+        {
+          "sound": {
+            "src": "/media/test/sound-long.mp3",
+            "description": "Fixture long sound"
+          }
+        },
+        {
+          "sound": {
+            "src": "/media/test/sound-third.mp3",
+            "description": "Fixture third sound"
+          }
+        }
+      ]
+    },
+    {
       "type": "title",
       "id": "end",
       "heading": "Fixture end"

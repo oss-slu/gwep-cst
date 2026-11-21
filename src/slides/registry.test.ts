@@ -148,6 +148,7 @@ describe("the production registry", () => {
       "calendar-year",
       "weather",
       "reveal",
+      "sounds",
     ]);
   });
 
@@ -160,8 +161,8 @@ describe("the production registry", () => {
         { type: "calendar-day", id: "day" },
       ]).success,
     ).toBe(true);
-    expect(problems(session([{ type: "sounds", id: "sounds" }]))).toEqual([
-      'slides.0.type: Unknown slide type "sounds". Registered types: title, calendar-day, calendar-month, calendar-year, weather, reveal',
+    expect(problems(session([{ type: "quiz", id: "quiz" }]))).toEqual([
+      'slides.0.type: Unknown slide type "quiz". Registered types: title, calendar-day, calendar-month, calendar-year, weather, reveal, sounds',
     ]);
   });
 

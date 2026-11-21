@@ -3,6 +3,7 @@ import { calendarDaySlide } from "./calendar-day/index.ts";
 import { calendarMonthSlide } from "./calendar-month/index.ts";
 import { calendarYearSlide } from "./calendar-year/index.ts";
 import { revealSlide } from "./reveal/index.ts";
+import { soundsSlide } from "./sounds/index.ts";
 import { titleSlide } from "./title/index.ts";
 import { weatherSlide } from "./weather/index.ts";
 import {
@@ -113,4 +114,5 @@ export const slideRegistry = createSlideRegistry([
   calendarYearSlide,
   weatherSlide,
   revealSlide,
+  soundsSlide,
 ]);

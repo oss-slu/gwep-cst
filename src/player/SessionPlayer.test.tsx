@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { AudioPlayer } from "../media/audio-player.ts";
 import { Route, Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import type { TestTextSlide } from "../../tests/support/test-slide-fields.ts";
@@ -317,5 +318,16 @@ describe("session player", () => {
 
     expect(await screen.findByText("Fixture slide two")).toBeDefined();
     expect(document.activeElement).toBe(nextButton());
+  });
+
+  it("stops any sound when moving to another slide", async () => {
+    const stop = vi.spyOn(AudioPlayer.prototype, "stop");
+    await setup("/sessions/orientation/one");
+    await screen.findByText("Fixture slide one");
+    stop.mockClear();
+    await click(nextButton());
+    await screen.findByText("Fixture slide two");
+    expect(stop).toHaveBeenCalled();
+    stop.mockRestore();
   });
 });
