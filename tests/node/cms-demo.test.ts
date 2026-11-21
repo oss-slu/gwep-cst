@@ -6,7 +6,9 @@ import {
   mkdtemp,
   readFile,
   readlink,
+  realpath,
   rm,
+  symlink,
   unlink,
 } from "node:fs/promises";
 import { networkInterfaces, tmpdir } from "node:os";
@@ -51,13 +53,29 @@ const git = async (cwd: string, ...args: string[]) =>
   (await run("git", args, { cwd })).stdout.trim();
 
 let root: string;
+let source: string;
 let copy: string;
+
+/**
+ * cms:demo-copy takes no arguments and always makes ../gwep-cst-cms-demo, so
+ * each case clones this repository into its own temporary folder and runs
+ * the script (this working copy's version) from that clone. Returns the
+ * clone and where its demo copy goes.
+ */
+async function cloneAndCopy(name: string) {
+  const folder = join(root, name);
+  await mkdir(folder);
+  const clone = join(folder, "gwep-cst");
+  await git(folder, "clone", "--quiet", REPO, clone);
+  await symlink(join(REPO, "node_modules"), join(clone, "node_modules"));
+  const made = await node(COPY_SCRIPT, [], clone);
+  expect(made.code, made.stderr).toBe(0);
+  return { clone, copy: join(folder, "gwep-cst-cms-demo") };
+}
 
 beforeAll(async () => {
   root = await mkdtemp(join(tmpdir(), "cms-demo-"));
-  copy = join(root, "copy");
-  const made = await node(COPY_SCRIPT, [copy], REPO);
-  expect(made.code, made.stderr).toBe(0);
+  ({ clone: source, copy } = await cloneAndCopy("main"));
 }, 120_000);
 
 afterAll(async () => {
@@ -82,24 +100,18 @@ describe("npm run cms:demo-copy", () => {
     };
     expect(marker.commit).toBe(await git(REPO, "rev-parse", "HEAD"));
     expect(await git(copy, "config", "user.email")).toBe("cms-demo@localhost");
-    expect(await readlink(join(copy, "node_modules"))).toBe(
-      join(REPO, "node_modules"),
+    // Compared as real paths: macOS reaches temp folders through /var and
+    // /private/var.
+    expect(await realpath(await readlink(join(copy, "node_modules")))).toBe(
+      await realpath(join(source, "node_modules")),
     );
     expect(await readFile(join(copy, ".git/info/exclude"), "utf8")).toMatch(
       /^node_modules$/m,
     );
   });
 
-  it("refuses a destination inside this repository, such as a stray '#'", async () => {
-    for (const destination of ["#", join(REPO, "content", "copy")]) {
-      const result = await node(COPY_SCRIPT, [destination], REPO);
-      expect(result.code, destination).toBe(1);
-      expect(result.stderr, destination).toContain("is inside this repository");
-    }
-  });
-
   it("refuses an existing destination", async () => {
-    const again = await node(COPY_SCRIPT, [copy], REPO);
+    const again = await node(COPY_SCRIPT, [], source);
     expect(again.code).toBe(1);
     expect(again.stderr).toContain(`${copy} already exists`);
   });
@@ -121,8 +133,7 @@ describe("npm run cms:local refuses unsafe folders", () => {
   });
 
   it("in a copy that has a git remote", async () => {
-    const other = join(root, "with-remote");
-    expect((await node(COPY_SCRIPT, [other], REPO)).code).toBe(0);
+    const { copy: other } = await cloneAndCopy("with-remote");
     await git(
       other,
       "remote",
@@ -136,8 +147,7 @@ describe("npm run cms:local refuses unsafe folders", () => {
   });
 
   it("in a copy without its marker", async () => {
-    const other = join(root, "no-marker");
-    expect((await node(COPY_SCRIPT, [other], REPO)).code).toBe(0);
+    const { copy: other } = await cloneAndCopy("no-marker");
     await unlink(join(other, ".git/cms-demo-copy.json"));
     const result = await node(LOCAL_SCRIPT, [], other);
     expect(result.code).toBe(1);

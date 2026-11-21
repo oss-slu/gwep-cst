@@ -83,7 +83,7 @@ Where each media file came from, and its rights, is recorded in `docs/MEDIA_PROV
 
 GWEP staff will edit content in Decap CMS at `/admin`. For now it runs only on your own computer, with no GitHub account, in a **disposable copy** of the repository, so edits never touch your working copy or GitHub. Production sign-in, publishing and previews are not set up yet.
 
-Once, make the copy next to this repository (it refuses if the copy already exists, or a destination inside this repository):
+Once, make the copy next to this repository, as `../gwep-cst-cms-demo` (the command takes no arguments, and refuses if the copy already exists):
 
 ```sh
 npm run cms:demo-copy
@@ -114,7 +114,7 @@ npm run cms:demo-copy
 
 Safeguards:
 
-- `cms:demo-copy` clones the current commit onto a local `main`, removes every git remote, sets the commit identity to `CMS demo <cms-demo@localhost>`, links `node_modules` (excluded from git) and writes a marker in `.git/`.
+- `cms:demo-copy` takes no arguments and always makes `../gwep-cst-cms-demo`. It clones the current commit onto a local `main`, removes every git remote, sets the commit identity to `CMS demo <cms-demo@localhost>`, links `node_modules` (excluded from git) and writes a marker in `.git/`.
 - `cms:local` refuses to start anywhere but the root of such a copy (marker present, its commit known, no remotes). It runs `decap-server` listening on 127.0.0.1:8081 only, accepting requests only from `http://localhost:5173` and only with a loopback `Host`, in git mode. These settings are passed explicitly, so a `.env` file cannot change them.
 - Uploads go to `public/media/<session>/` and are referenced as `/media/<session>/<file>`, the path rule both validators enforce. Type the picture's real width and height, and remove variants that no longer match; `validate-media` checks both.
 - `decap-server` 3.11.6 depends on `@decap/cli` 0.1.3, whose `@hapi/joi` and unused `zod` 3 have high-severity advisories with no fix in those packages. `package.json` `overrides` replace them inside `@decap/cli` only, with `joi` 17.13.9 (the maintained package, same API) and `zod` 4.6.7. Remove the overrides once a `decap-server` release no longer needs them.

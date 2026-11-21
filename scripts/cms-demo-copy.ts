@@ -2,26 +2,15 @@
 // of the current commit on a local "main" branch, with no git remotes, the
 // project's node_modules linked in, a demo-only git identity, and a marker
 // that npm run cms:local checks before starting.
-// Usage: npm run cms:demo-copy [-- <destination>]   (default ../gwep-cst-cms-demo)
+// It takes no arguments: the copy is always ../gwep-cst-cms-demo, next to the
+// repository it is run from, so no typed path can place it anywhere else.
+// Usage: npm run cms:demo-copy
 import { appendFile, lstat, symlink, writeFile } from "node:fs/promises";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { DEFAULT_COPY_NAME, MARKER, git, type Marker } from "./cms/demo.ts";
 
 const source = await git(process.cwd(), "rev-parse", "--show-toplevel");
-const destination = resolve(
-  process.argv[2] ?? join(dirname(source), DEFAULT_COPY_NAME),
-);
-
-// Inside this repository the copy would be committed as an embedded
-// repository, and a stray argument (for example a shell "#" that was meant
-// as a comment) must not create one there.
-const inside = relative(source, destination);
-if (inside === "" || (!inside.startsWith("..") && !inside.startsWith("/"))) {
-  console.error(
-    `cms:demo-copy: ${destination} is inside this repository. Choose a folder outside it, or run without an argument for ../${DEFAULT_COPY_NAME}.`,
-  );
-  process.exit(1);
-}
+const destination = join(dirname(source), DEFAULT_COPY_NAME);
 
 const exists = await lstat(destination).then(
   () => true,

@@ -1,5 +1,5 @@
 import { execFile, spawn, type ChildProcess } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -52,8 +52,20 @@ test.use({ viewport: { width: 1400, height: 1000 }, actionTimeout: 20_000 });
 test.beforeAll(async () => {
   test.setTimeout(180_000);
   root = await mkdtemp(join(tmpdir(), "cms-editor-"));
-  copy = join(root, "copy");
-  await run(process.execPath, ["scripts/cms-demo-copy.ts", copy]);
+  // cms:demo-copy takes no arguments and makes ../gwep-cst-cms-demo, so run
+  // it from a temporary clone of this repository.
+  const clone = join(root, "gwep-cst");
+  await run("git", ["clone", "--quiet", process.cwd(), clone]);
+  await symlink(
+    join(process.cwd(), "node_modules"),
+    join(clone, "node_modules"),
+  );
+  await run(
+    process.execPath,
+    [join(process.cwd(), "scripts/cms-demo-copy.ts")],
+    { cwd: clone },
+  );
+  copy = join(root, "gwep-cst-cms-demo");
   backend = await start(
     ["scripts/cms-local.ts"],
     "listening on 127.0.0.1:8081",
