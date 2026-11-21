@@ -76,7 +76,7 @@ export function imageFields(
       },
       {
         name: "variants",
-        label: "Smaller copies (optional)",
+        label: "Smaller copies",
         widget: "list",
         required: false,
         hint: "The same picture saved at other widths, with the same shape. Phones then download a smaller file.",

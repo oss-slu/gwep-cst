@@ -42,3 +42,8 @@ Gentle synthetic tones, 3.0 seconds each, mono MP3 at 96 kbps, normalised to -16
 | `orientation/placeholder-whistle.mp3` | A sine sweep rising from 600 to 1200 Hz | Placeholder sound: a rising whistle | 36,576 | -16.46 LUFS | -12.97 dBTP | `b505c9464f393261` |
 
 Before presenting, play each sound once on the demo machine and room speakers to confirm the level is comfortable.
+
+## Content editor demo upload (M0-10)
+
+`tests/fixtures/media/cms-replacement.png` is the picture uploaded in the local content editor walkthrough and its browser test. It is `orientation/placeholder-2.png` scaled to 1000 x 750 with FFmpeg (`-vf scale=1000:750`), so it is the same original work under the same MIT license, and still reads "PLACEHOLDER IMAGE 2". It is never served by the site: it only lands in `public/media/orientation/` inside a disposable demo copy.
+

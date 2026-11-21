@@ -85,6 +85,11 @@ export function buildCmsConfig(
         delete: false,
         identifier_field: "title",
         slug: "{{fields.slug}}",
+        // Uploads go into the session's own folder, public/media/<slug>/,
+        // and are referenced as /media/<slug>/<file>: the path rule that
+        // validate-content and validate-media enforce.
+        media_folder: "/public/media/{{slug}}",
+        public_folder: "/media/{{slug}}",
         fields: [
           ...SESSION_FIELDS,
           {
