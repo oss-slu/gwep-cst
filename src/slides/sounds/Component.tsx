@@ -38,8 +38,14 @@ export default function SoundsSlide({ slide }: SlideProps<SoundsSlideData>) {
     if (clip === undefined) return;
     setClip(index, "loading");
     playback.current = audio.play(clip.sound.src, (event) => {
-      if (event === "playing") setClip(index, "playing");
-      else setClip(index, event === "ended" ? "idle" : "failed");
+      if (event === "playing") {
+        setClip(index, "playing");
+        return;
+      }
+      // The clip is over and its element released: drop the handle too, so
+      // nothing here keeps the finished clip alive.
+      playback.current = null;
+      setClip(index, event === "ended" ? "idle" : "failed");
     });
   }
 

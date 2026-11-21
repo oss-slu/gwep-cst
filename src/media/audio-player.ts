@@ -2,8 +2,32 @@ import type { AudioService, Playback, PlaybackEvent } from "./audio-service.ts";
 
 interface Current {
   readonly element: HTMLAudioElement;
-  readonly onEvent: (event: PlaybackEvent) => void;
+  readonly handle: PlaybackHandle;
   readonly removeListeners: (() => void)[];
+}
+
+/**
+ * What play() returns. It reaches its clip only until the clip is
+ * released, so a slide that keeps the handle after a clip ends does not
+ * keep that clip's audio element alive. It is a class rather than a closure
+ * inside play(), because closures created there share one scope that also
+ * holds the element.
+ */
+class PlaybackHandle implements Playback {
+  #stop: (() => void) | undefined;
+
+  constructor(stop: () => void) {
+    this.#stop = stop;
+  }
+
+  readonly stop = () => {
+    this.#stop?.();
+  };
+
+  /** Called when the clip is released: forget it. */
+  detach(): void {
+    this.#stop = undefined;
+  }
 }
 
 /**
@@ -28,7 +52,13 @@ export class AudioPlayer implements AudioService {
   play(src: string, onEvent: (event: PlaybackEvent) => void): Playback {
     this.stop();
     const element = this.#createElement();
-    const current: Current = { element, onEvent, removeListeners: [] };
+    const current: Current = {
+      element,
+      handle: new PlaybackHandle(() => {
+        if (this.#current === current) this.#release(current);
+      }),
+      removeListeners: [],
+    };
     this.#current = current;
 
     const isCurrent = () => this.#current === current;
@@ -62,11 +92,7 @@ export class AudioPlayer implements AudioService {
       finish("failed");
     });
 
-    return {
-      stop: () => {
-        if (isCurrent()) this.#release(current);
-      },
-    };
+    return current.handle;
   }
 
   stop(): void {
@@ -82,6 +108,7 @@ export class AudioPlayer implements AudioService {
   /** Removes the listeners, stops the sound and frees the download. */
   #release(current: Current): void {
     if (this.#current === current) this.#current = undefined;
+    current.handle.detach();
     for (const remove of current.removeListeners.splice(0)) remove();
     const { element } = current;
     element.pause();

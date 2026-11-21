@@ -182,6 +182,21 @@ describe("sounds slide", () => {
     expect(plays[0]?.stopped).toBe(true);
   });
 
+  it.each(["ended", "failed"] as const)(
+    "after a clip has %s, holds no handle, so unmounting has nothing to stop",
+    (terminal) => {
+      const { service, plays } = fakeAudio();
+      const { unmount } = renderWith(service, <Sounds slide={slide} />);
+      fireEvent.click(button("Fixture sound one"));
+      act(() => {
+        plays[0]?.send("playing");
+        plays[0]?.send(terminal);
+      });
+      unmount();
+      expect(plays[0]?.stopped).toBe(false);
+    },
+  );
+
   it("renders supplied text as text, never as markup", () => {
     const { service } = fakeAudio();
     renderWith(
