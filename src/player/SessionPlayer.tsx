@@ -1,4 +1,4 @@
-import { Suspense, use, useEffect, useRef } from "react";
+import { Suspense, use, useEffect, useEffectEvent, useRef } from "react";
 import { Link, Redirect, useLocation } from "wouter";
 import { BackToSessions } from "../app/BackToSessions.tsx";
 import { format, ui } from "../app/copy.ts";
@@ -109,6 +109,9 @@ function Player<S extends AnySlide>({
   // focus where it is. Any other arrival (a link, a typed address, Back or
   // Forward) moves focus to the slide.
   const keepFocus = useRef(false);
+  // Set by "Try again" on a slide that failed to download. Its button goes
+  // away, so focus returns to the slide once the slide appears.
+  const focusSlideWhenShown = useRef(false);
 
   const total = session.slides.length;
   const position = format(ui.player.position, { current: index + 1, total });
@@ -163,13 +166,24 @@ function Player<S extends AnySlide>({
             previous slide unmounts and only the current one is mounted. */}
         <ErrorBoundary
           key={slide.id}
-          onRetry={data.forgetFailures}
+          onRetry={() => {
+            focusSlideWhenShown.current = true;
+            data.forgetFailures();
+          }}
           fallback={(failure) => (
             <LoadErrorView {...failure} level={2} backLink={false} />
           )}
         >
           <Suspense fallback={<Loading />}>
-            <SlideContent data={data} slide={slide} />
+            <SlideContent
+              data={data}
+              slide={slide}
+              onShown={() => {
+                if (!focusSlideWhenShown.current) return;
+                focusSlideWhenShown.current = false;
+                slideArea.current?.focus();
+              }}
+            />
           </Suspense>
         </ErrorBoundary>
       </section>
@@ -205,11 +219,18 @@ function Player<S extends AnySlide>({
 function SlideContent<S extends AnySlide>({
   data,
   slide,
+  onShown,
 }: {
   readonly data: PlayerData<S>;
   readonly slide: S;
+  /** Runs once the slide's component has loaded and the slide is on screen. */
+  readonly onShown: () => void;
 }) {
   const Slide = use(data.loadComponent(slide));
+  const shown = useEffectEvent(onShown);
+  useEffect(() => {
+    shown();
+  }, []);
   // The component is not created here: it comes from a cache that holds one
   // per slide type, so it is the same on every render of this slide.
   // eslint-disable-next-line react-hooks/static-components

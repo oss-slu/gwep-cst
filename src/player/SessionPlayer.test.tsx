@@ -280,9 +280,11 @@ describe("session player", () => {
     expect(document.activeElement).toBe(heading);
     expect(nextButton()).toBeDefined();
 
+    screen.getByRole("button", { name: ui.errors.loadFailed.retry }).focus();
     await click(
       screen.getByRole("button", { name: ui.errors.loadFailed.retry }),
     );
     expect(await screen.findByText("Fixture slide one")).toBeDefined();
+    expect(document.activeElement).toBe(slideArea("Slide 1 of 3"));
   });
 });

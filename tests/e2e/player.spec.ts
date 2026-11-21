@@ -356,6 +356,10 @@ test.describe("download failures", () => {
     network.restore();
     await page.getByRole("button", { name: failed.retry }).click();
     await expectSlide(page, 1);
+    // The Try again button is gone, so focus returns to the slide, and the
+    // address is unchanged.
+    await expect(slideArea(page, 1)).toBeFocused();
+    await expect(page).toHaveURL(path(ids[0] ?? ""));
   });
 
   test("still failing after Try again: Reload page keeps the address", async ({
