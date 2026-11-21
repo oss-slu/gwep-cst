@@ -8,3 +8,4 @@ lighthouse-reports/
 tests/fixtures/sessions/malformed/
 public/admin/config.yml
 dist-request-fixture/
+.vite/

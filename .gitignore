@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 dist/
 coverage/
 test-results/
@@ -9,3 +9,4 @@ playwright-report/
 .DS_Store
 lighthouse-reports/
 dist-request-fixture/
+.vite/

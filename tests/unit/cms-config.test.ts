@@ -81,4 +81,12 @@ describe("CMS config generation", () => {
       expect(type?.fields.slice(2)).toEqual(module.cmsFields);
     }
   });
+
+  it("uploads into each session's own media folder, matching the content path rule", () => {
+    const [sessions] = buildCmsConfig().collections;
+    expect(sessions).toMatchObject({
+      media_folder: "/public/media/{{slug}}",
+      public_folder: "/media/{{slug}}",
+    });
+  });
 });

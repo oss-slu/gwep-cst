@@ -7,6 +7,7 @@ export default tseslint.config(
     ignores: [
       "dist/",
       "dist-request-fixture/",
+      ".vite/",
       "coverage/",
       "test-results/",
       "playwright-report/",

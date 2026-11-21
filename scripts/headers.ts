@@ -51,3 +51,35 @@ export function findRule(
   if (!rule) throw new Error(`No header rule for "${pattern}"`);
   return rule;
 }
+
+/** Whether a Cloudflare `_headers` path pattern matches a path ("*" matches anything). */
+export function matchesPattern(pattern: string, path: string): boolean {
+  const regex = new RegExp(
+    `^${pattern
+      .split("*")
+      .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&"))
+      .join(".*")}$`,
+  );
+  return regex.test(path);
+}
+
+/**
+ * The headers a path gets, the way Cloudflare applies `_headers`: every
+ * matching rule in file order; "! Name" removes a header set earlier, and a
+ * header set again is joined to the earlier value with ", ".
+ */
+export function effectiveHeaders(
+  rules: readonly HeaderRule[],
+  path: string,
+): Record<string, string> {
+  const headers = new Map<string, string>();
+  for (const rule of rules) {
+    if (!matchesPattern(rule.pattern, path)) continue;
+    for (const name of rule.detached) headers.delete(name);
+    for (const [name, value] of Object.entries(rule.headers)) {
+      const earlier = headers.get(name);
+      headers.set(name, earlier === undefined ? value : `${earlier}, ${value}`);
+    }
+  }
+  return Object.fromEntries(headers);
+}

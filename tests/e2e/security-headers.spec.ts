@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { findRule, parseHeadersFile } from "../support/headers";
+import { findRule, parseHeadersFile } from "../../scripts/headers.ts";
 
 const viewports = [
   { name: "phone", width: 375, height: 667 },
