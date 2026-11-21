@@ -1,0 +1,116 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { ui } from "../../app/copy.ts";
+import type { Image } from "../../content/schema.ts";
+import { SlideImage, srcSet } from "./SlideImage.tsx";
+
+const image: Image = {
+  src: "/media/test/landmark.png",
+  alt: "Fixture picture description",
+  width: 1600,
+  height: 1200,
+};
+const { failed, retry, retrying } = ui.slides.image;
+
+const picture = () => screen.getByAltText(image.alt);
+const retryButton = () => screen.getByRole("button");
+
+describe("SlideImage", () => {
+  it("reserves the picture's shape and passes its size to the browser", () => {
+    const { container } = render(<SlideImage image={image} />);
+    const frame = container.firstElementChild as HTMLElement;
+    expect(frame.style.getPropertyValue("--image-ratio")).toBe("1600 / 1200");
+    expect(frame.style.getPropertyValue("--image-width")).toBe("1600px");
+    expect(picture().getAttribute("width")).toBe("1600");
+    expect(picture().getAttribute("height")).toBe("1200");
+    expect(picture().hasAttribute("srcset")).toBe(false);
+  });
+
+  it("lists variants as a srcset, widest first", () => {
+    const withVariants: Image = {
+      ...image,
+      variants: [
+        { src: "/media/test/landmark-400.png", width: 400 },
+        { src: "/media/test/landmark-800.png", width: 800 },
+      ],
+    };
+    expect(srcSet(withVariants)).toBe(
+      "/media/test/landmark.png 1600w, /media/test/landmark-800.png 800w, /media/test/landmark-400.png 400w",
+    );
+    render(<SlideImage image={withVariants} />);
+    expect(picture().getAttribute("srcset")).toBe(srcSet(withVariants));
+    expect(picture().getAttribute("sizes")).not.toBeNull();
+  });
+
+  it("on failure shows the message, the description and a retry button", () => {
+    render(<SlideImage image={image} />);
+    fireEvent.error(picture());
+    expect(screen.getByText(failed)).toBeDefined();
+    expect(screen.getByText(image.alt)).toBeDefined();
+    expect(retryButton().textContent).toBe(retry);
+    expect(screen.queryByRole("img")).toBeNull();
+  });
+
+  it("while retrying keeps the button (and its focus) and loads a new picture", () => {
+    render(<SlideImage image={image} />);
+    fireEvent.error(picture());
+    retryButton().focus();
+    fireEvent.click(retryButton());
+
+    expect(retryButton().textContent).toBe(retrying);
+    expect(retryButton().getAttribute("aria-disabled")).toBe("true");
+    expect(document.activeElement).toBe(retryButton());
+    expect(picture().className).toContain("slide-image__picture--pending");
+
+    fireEvent.click(retryButton());
+    expect(retryButton().textContent).toBe(retrying);
+  });
+
+  it("moves focus to the picture when it loads while Retry still has focus", () => {
+    render(<SlideImage image={image} />);
+    fireEvent.error(picture());
+    retryButton().focus();
+    fireEvent.click(retryButton());
+    fireEvent.load(picture());
+
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(document.activeElement).toBe(picture());
+  });
+
+  it("leaves focus alone when the facilitator moved on before it loaded", () => {
+    render(
+      <>
+        <SlideImage image={image} />
+        <button type="button">Elsewhere</button>
+      </>,
+    );
+    fireEvent.error(picture());
+    screen.getByRole("button", { name: retry }).focus();
+    fireEvent.click(screen.getByRole("button", { name: retry }));
+    const elsewhere = screen.getByRole("button", { name: "Elsewhere" });
+    elsewhere.focus();
+    fireEvent.load(picture());
+
+    expect(document.activeElement).toBe(elsewhere);
+  });
+
+  it("keeps focus on Retry when retrying fails again", () => {
+    render(<SlideImage image={image} />);
+    fireEvent.error(picture());
+    retryButton().focus();
+    fireEvent.click(retryButton());
+    fireEvent.error(picture());
+
+    expect(retryButton().textContent).toBe(retry);
+    expect(document.activeElement).toBe(retryButton());
+  });
+
+  it("shows no description for a decorative picture", () => {
+    render(<SlideImage image={{ ...image, alt: "", decorative: true }} />);
+    const img = document.querySelector("img");
+    expect(img?.getAttribute("alt")).toBe("");
+    if (img) fireEvent.error(img);
+    expect(screen.getByText(failed)).toBeDefined();
+    expect(document.querySelector(".slide-image__alt")).toBeNull();
+  });
+});

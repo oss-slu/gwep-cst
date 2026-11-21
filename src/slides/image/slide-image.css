@@ -1,0 +1,58 @@
+/*
+ * The frame takes the picture's shape before anything loads, at most the
+ * picture's own width and a share of the screen's height, so the slide
+ * never shifts when the picture arrives, fails or loads again.
+ */
+.slide-image {
+  --image-max-height: 38vh;
+  position: relative;
+  box-sizing: border-box;
+  width: min(
+    100%,
+    var(--image-width),
+    calc(var(--image-max-height) * var(--image-shape))
+  );
+  aspect-ratio: var(--image-ratio);
+  flex-shrink: 0;
+}
+
+.slide-image__picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* A retry that is still loading stays under the failure message. */
+.slide-image__picture--pending {
+  opacity: 0;
+}
+
+.slide-image__failed {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  overflow: auto;
+  border: 4px dashed var(--color-muted);
+  border-radius: 0.5rem;
+  background: var(--color-background);
+  text-align: center;
+}
+
+.slide-image__message,
+.slide-image__alt {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.slide-image__alt {
+  font-weight: 600;
+}

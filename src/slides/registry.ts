@@ -2,7 +2,9 @@ import { z } from "zod";
 import { calendarDaySlide } from "./calendar-day/index.ts";
 import { calendarMonthSlide } from "./calendar-month/index.ts";
 import { calendarYearSlide } from "./calendar-year/index.ts";
+import { revealSlide } from "./reveal/index.ts";
 import { titleSlide } from "./title/index.ts";
+import { weatherSlide } from "./weather/index.ts";
 import {
   isDefinedSlideModule,
   type AnySlideModule,
@@ -109,4 +111,6 @@ export const slideRegistry = createSlideRegistry([
   calendarDaySlide,
   calendarMonthSlide,
   calendarYearSlide,
+  weatherSlide,
+  revealSlide,
 ]);

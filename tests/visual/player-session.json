@@ -1,0 +1,49 @@
+{
+  "slug": "fixture",
+  "number": 9,
+  "title": "Fixture session",
+  "slides": [
+    { "type": "title", "id": "start", "heading": "Fixture start" },
+    {
+      "type": "weather",
+      "id": "weather",
+      "heading": "Fixture weather question?",
+      "levels": [
+        { "label": "Fixture cold" },
+        { "label": "Fixture cool" },
+        { "label": "Fixture mild" },
+        { "label": "Fixture warm" },
+        { "label": "Fixture hot" }
+      ]
+    },
+    {
+      "type": "reveal",
+      "id": "reveal",
+      "prompt": "Fixture reveal question?",
+      "image": {
+        "src": "/media/test/landmark.png",
+        "alt": "Fixture picture description",
+        "width": 1600,
+        "height": 1200
+      },
+      "answer": "Fixture answer"
+    },
+    {
+      "type": "reveal",
+      "id": "reveal-variants",
+      "prompt": "Fixture question with smaller copies?",
+      "image": {
+        "src": "/media/test/landmark.png",
+        "alt": "Fixture picture description",
+        "width": 1600,
+        "height": 1200,
+        "variants": [
+          { "src": "/media/test/landmark-800.png", "width": 800 },
+          { "src": "/media/test/landmark-400.png", "width": 400 }
+        ]
+      },
+      "answer": "Fixture answer"
+    },
+    { "type": "title", "id": "end", "heading": "Fixture end" }
+  ]
+}

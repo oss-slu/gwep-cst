@@ -26,6 +26,10 @@ export const siteSchema = z.strictObject({
       controls: text,
       position: template("current", "total"),
     }),
+    slides: z.strictObject({
+      reveal: z.strictObject({ show: text, hide: text }),
+      image: z.strictObject({ failed: text, retry: text, retrying: text }),
+    }),
     errors: z.strictObject({
       pageNotFound: message,
       sessionNotFound: message,
