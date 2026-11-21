@@ -1,11 +1,14 @@
-// Validates every session file in content/sessions/ (relative to the folder
-// it is run from) and exits 1 if any problem is found. It takes no arguments.
+// Validates content/catalog.json and every session file in content/sessions/
+// (relative to the folder it is run from), and checks them against each other.
+// Exits 1 if any problem is found. It takes no arguments.
 // Usage: npm run validate-content
 import type { Dirent } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { catalogSchema } from "../src/content/catalog-schema.ts";
 import { sessionSchema, type Session } from "../src/content/session-schema.ts";
 import {
+  checkCatalogAgainstSessions,
   checkSessionSet,
   checkSessionText,
   formatProblem,
@@ -13,6 +16,7 @@ import {
 } from "../src/content/validate.ts";
 
 const folder = "content/sessions";
+const catalogFile = "content/catalog.json";
 
 function describe(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -70,6 +74,33 @@ for (const entry of entries) {
 }
 problems.push(...checkSessionSet(sessions));
 
+// The catalog goes through the same JSON and schema checks as a session file.
+let catalogText: string | undefined;
+try {
+  catalogText = await readFile(catalogFile, "utf8");
+} catch (error) {
+  problems.push({
+    file: catalogFile,
+    path: "",
+    message: `Cannot read file: ${describe(error)}`,
+  });
+}
+if (catalogText !== undefined) {
+  const catalog = checkSessionText(catalogFile, catalogText, catalogSchema);
+  if (catalog.ok) {
+    problems.push(
+      ...checkCatalogAgainstSessions(
+        catalogFile,
+        catalog.session,
+        entries.map((entry) => join(folder, entry.name)),
+        sessions,
+      ),
+    );
+  } else {
+    problems.push(...catalog.problems);
+  }
+}
+
 for (const problem of problems) console.error(formatProblem(problem));
 const count = `${String(entries.length)} session file${entries.length === 1 ? "" : "s"}`;
 if (problems.length > 0) {
@@ -78,5 +109,7 @@ if (problems.length > 0) {
   );
   process.exitCode = 1;
 } else {
-  console.log(`validate-content: ${count} in ${folder}, no problems.`);
+  console.log(
+    `validate-content: ${count} in ${folder} and ${catalogFile}, no problems.`,
+  );
 }

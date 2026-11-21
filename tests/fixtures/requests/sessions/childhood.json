@@ -1,0 +1,12 @@
+{
+  "slug": "childhood",
+  "number": 1,
+  "title": "Request fixture: Childhood",
+  "slides": [
+    {
+      "type": "title",
+      "id": "welcome",
+      "heading": "REQUEST_FIXTURE_SECOND_SESSION"
+    }
+  ]
+}

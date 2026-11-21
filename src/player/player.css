@@ -1,0 +1,43 @@
+/*
+ * The player fills the screen: a header, the slide, and the controls. Only
+ * the slide area grows, so the controls stay in the same place on every slide.
+ */
+.player {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  height: 100vh;
+  height: 100dvh;
+  padding: 0.5rem 1rem;
+}
+
+.player__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.player__title {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.player__slide {
+  min-height: 0;
+  overflow: auto;
+}
+
+.player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.player__position {
+  margin: 0;
+  text-align: center;
+}
