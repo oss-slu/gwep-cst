@@ -21,6 +21,8 @@ export interface PlayableSession<S extends AnySlide> {
  */
 export interface PlayerData<S extends AnySlide> {
   loadSession(slug: string): Promise<PlayableSession<S>>;
+  /** The session if it has already loaded (no waiting). */
+  readySession(slug: string): PlayableSession<S> | undefined;
   loadComponent(slide: S): Promise<SlideComponent<S>>;
   /** The slide's component if it has already loaded (no waiting). */
   readyComponent(slide: S): SlideComponent<S> | undefined;
@@ -39,6 +41,7 @@ export function createPlayerData<S extends AnySlide>(
     // One download per slide type: every slide of a type shares its component.
     loadComponent: (slide) =>
       components.get(slide.type, () => registry.loadComponent(slide)),
+    readySession: (slug) => sessions.peek(slug),
     readyComponent: (slide) => components.peek(slide.type),
     forgetFailures() {
       sessions.forgetFailures();

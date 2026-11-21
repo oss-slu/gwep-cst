@@ -63,6 +63,11 @@ describe("SlideImage", () => {
     ]);
   });
 
+  it("shows the picture as it arrives, without waiting for its load event", () => {
+    render(<SlideImage image={image} />);
+    expect(picture().className).toBe("slide-image__picture");
+  });
+
   it("while retrying keeps the button (and its focus) and loads a new picture", () => {
     render(<SlideImage image={image} />);
     fireEvent.error(picture());

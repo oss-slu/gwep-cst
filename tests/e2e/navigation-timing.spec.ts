@@ -164,6 +164,7 @@ for (const profile of PROFILES) {
         interactions: timing.interactions.map(
           (entry) => `${entry.name} ${String(Math.round(entry.duration))} ms`,
         ),
+        slideReadyAll: timing.ready.map((value) => Math.round(value)),
         slideReadyMs: {
           count: sortedReady.length,
           median: Math.round(

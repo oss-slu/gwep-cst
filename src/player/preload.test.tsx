@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { IMAGE_SIZES } from "../slides/image/sources.ts";
 import type { SlideComponent } from "../slides/types.ts";
 import type { AnySlide, PlayerData } from "./player-data.ts";
-import { imagesIn, usePreloadSlide } from "./preload.ts";
+import { imagesIn } from "../slides/image/sources.ts";
+import { usePreloadSlide } from "./preload.ts";
 
 const picture = {
   src: "/media/o/a.png",
@@ -41,6 +42,7 @@ function fakeData(load: () => Promise<SlideComponent<AnySlide>>) {
   return {
     loadSession: vi.fn(),
     loadComponent: vi.fn(load),
+    readySession: vi.fn(() => undefined),
     readyComponent: vi.fn(() => undefined),
     forgetFailures: vi.fn(),
   } satisfies PlayerData<AnySlide>;

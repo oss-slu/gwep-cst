@@ -1,4 +1,11 @@
-import { Suspense, use, useEffect, useEffectEvent, useRef } from "react";
+import {
+  Suspense,
+  use,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from "react";
 import { Link, Redirect, useLocation } from "wouter";
 import { BackToSessions } from "../app/BackToSessions.tsx";
 import { format, ui } from "../app/copy.ts";
@@ -56,7 +63,9 @@ function LoadedSession<S extends AnySlide>({
   slug,
   slideId,
 }: SessionPlayerProps<S>) {
-  const session = use(data.loadSession(slug));
+  // Already loaded when the player was prepared (see prepareSession), so
+  // a deep link does not suspend a second time.
+  const session = data.readySession(slug) ?? use(data.loadSession(slug));
   const first = session.slides[0];
   if (first === undefined) {
     // The schema requires at least one slide; this is a safety net.
@@ -240,21 +249,26 @@ function SlideFrame<S extends AnySlide>({
         <LoadErrorView {...failure} level={2} backLink={false} />
       )}
     >
-      <Suspense fallback={<Loading />}>
-        <SlideContent
-          data={data}
-          slide={slide}
-          onShown={() => {
-            if (!focusWhenShown.current) return;
-            focusWhenShown.current = false;
-            focusSlideArea();
-          }}
-        />
-      </Suspense>
+      <SlideContent
+        data={data}
+        slide={slide}
+        onShown={() => {
+          if (!focusWhenShown.current) return;
+          focusWhenShown.current = false;
+          focusSlideArea();
+        }}
+      />
     </ErrorBoundary>
   );
 }
 
+/**
+ * One slide's component. A component already loaded (by an earlier slide of
+ * its type, or by the next-slide preload) renders at once. Otherwise this
+ * shows "Loading…" until it arrives, using plain state rather than Suspense:
+ * React holds content that follows a Suspense fallback for at least 300 ms.
+ * A failed load is thrown to the slide's error boundary.
+ */
 function SlideContent<S extends AnySlide>({
   data,
   slide,
@@ -265,18 +279,32 @@ function SlideContent<S extends AnySlide>({
   /** Runs once the slide's component has loaded and the slide is on screen. */
   readonly onShown: () => void;
 }) {
-  // The effect runs only after the slide commits, so it may come first; the
-  // conditional use() below must stay last, after every other hook, so a
-  // suspended render replays its hooks in the same order.
+  const [Slide, setSlide] = useState(() => data.readyComponent(slide));
+  const [failure, setFailure] = useState<{ error: unknown }>();
   const shown = useEffectEvent(onShown);
+
   useEffect(() => {
-    shown();
-  }, []);
-  // A component that has already loaded (by an earlier slide of its type,
-  // or by the next-slide preload) renders at once, with no loading state.
-  const Slide = data.readyComponent(slide) ?? use(data.loadComponent(slide));
-  // The component is not created here: it comes from a cache that holds one
-  // per slide type, so it is the same on every render of this slide.
-  // eslint-disable-next-line react-hooks/static-components
+    if (Slide !== undefined) return;
+    let active = true;
+    data.loadComponent(slide).then(
+      (component) => {
+        // A component is a function, so wrap it: setSlide(fn) would call it.
+        if (active) setSlide(() => component);
+      },
+      (error: unknown) => {
+        if (active) setFailure({ error });
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [Slide, data, slide]);
+
+  useEffect(() => {
+    if (Slide !== undefined) shown();
+  }, [Slide]);
+
+  if (failure !== undefined) throw failure.error;
+  if (Slide === undefined) return <Loading />;
   return <Slide slide={slide} />;
 }

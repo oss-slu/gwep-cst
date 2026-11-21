@@ -1,26 +1,6 @@
 import { useEffect } from "react";
-import type { Image } from "../content/schema.ts";
-import { IMAGE_SIZES, srcSet } from "../slides/image/sources.ts";
+import { imagesIn, requestPicture } from "../slides/image/sources.ts";
 import type { AnySlide, PlayerData } from "./player-data.ts";
-
-/**
- * The pictures in a slide's data: every object with a src, a width and a
- * height, which is imageSchema's shape. Sounds have no width, so they are
- * never preloaded and nothing downloads audio before Play.
- */
-export function imagesIn(value: unknown): Image[] {
-  if (Array.isArray(value)) return value.flatMap(imagesIn);
-  if (typeof value !== "object" || value === null) return [];
-  const record = value as Record<string, unknown>;
-  if (
-    typeof record.src === "string" &&
-    typeof record.width === "number" &&
-    typeof record.height === "number"
-  ) {
-    return [value as Image];
-  }
-  return Object.values(record).flatMap(imagesIn);
-}
 
 /**
  * Gets the next slide ready while the current one is shown: its component
@@ -42,16 +22,7 @@ export function usePreloadSlide<S extends AnySlide>(
     data.loadComponent(slide).catch(() => {
       data.forgetFailures();
     });
-    const pictures = imagesIn(slide).map((image) => {
-      const picture = new window.Image();
-      picture.decoding = "async";
-      if (image.variants !== undefined) {
-        picture.sizes = IMAGE_SIZES;
-        picture.srcset = srcSet(image);
-      }
-      picture.src = image.src;
-      return picture;
-    });
+    const pictures = imagesIn(slide).map(requestPicture);
     return () => {
       // Stop any download still running and drop the references.
       for (const picture of pictures) {

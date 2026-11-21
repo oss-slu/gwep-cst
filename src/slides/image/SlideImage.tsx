@@ -45,9 +45,9 @@ export function SlideImage({ image }: { readonly image: Image }) {
             key={attempt}
             ref={picture}
             className={
-              status === "loaded"
-                ? "slide-image__picture"
-                : "slide-image__picture slide-image__picture--pending"
+              status === "retrying"
+                ? "slide-image__picture slide-image__picture--pending"
+                : "slide-image__picture"
             }
             src={image.src}
             srcSet={image.variants === undefined ? undefined : srcSet(image)}
