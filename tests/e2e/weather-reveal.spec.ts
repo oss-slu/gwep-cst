@@ -110,7 +110,7 @@ test.describe("weather thermometer", () => {
     ] as const) {
       await page.keyboard.press(key);
       await expect(slider, key).toHaveAttribute("aria-valuetext", level);
-      await expect(position(page), key).toHaveText("Slide 2 of 5");
+      await expect(position(page), key).toHaveText("Slide 2 of 6");
     }
   });
 
@@ -129,7 +129,7 @@ test.describe("weather thermometer", () => {
       });
     });
     await page.keyboard.press("PageDown");
-    await expect(position(page)).toHaveText("Slide 3 of 5");
+    await expect(position(page)).toHaveText("Slide 3 of 6");
     expect(
       await page.evaluate(
         () => (window as unknown as { markerMoves: number }).markerMoves,
@@ -139,7 +139,7 @@ test.describe("weather thermometer", () => {
     await open(page, "weather");
     await thermometer(page).focus();
     await page.keyboard.press("PageUp");
-    await expect(position(page)).toHaveText("Slide 1 of 5");
+    await expect(position(page)).toHaveText("Slide 1 of 6");
   });
 
   test("one click on a level's words or on the tube sets the marker", async ({
@@ -160,7 +160,7 @@ test.describe("weather thermometer", () => {
     point = await centre(".thermometer__segment", "Fixture cold");
     await page.mouse.click(point.x, point.y);
     await expect(slider).toHaveAttribute("aria-valuetext", "Fixture cold");
-    await expect(position(page)).toHaveText("Slide 2 of 5");
+    await expect(position(page)).toHaveText("Slide 2 of 6");
   });
 
   test("every level is a target at least 44 px tall and the full width", async ({
@@ -204,7 +204,7 @@ test.describe("weather by touch", () => {
       "aria-valuetext",
       "Fixture cool",
     );
-    await expect(position(page)).toHaveText("Slide 2 of 5");
+    await expect(position(page)).toHaveText("Slide 2 of 6");
   });
 });
 
@@ -235,7 +235,7 @@ test.describe("reveal", () => {
     await page.keyboard.press("Space");
     await expect(page.getByText("Fixture answer")).toHaveCount(0);
     await expect(revealButton(page)).toBeFocused();
-    await expect(position(page)).toHaveText("Slide 3 of 5");
+    await expect(position(page)).toHaveText("Slide 3 of 6");
   });
 
   test("a click reveals the answer without moving the picture or the button", async ({
@@ -350,7 +350,7 @@ test.describe("picture failure and recovery", () => {
     await expect(retryButton(page)).toHaveCount(0);
     await expect(picture).toBeFocused();
     await expect(page.getByText("Fixture answer")).toBeVisible();
-    await expect(position(page)).toHaveText("Slide 3 of 5");
+    await expect(position(page)).toHaveText("Slide 3 of 6");
   });
 
   test("Retry failing again keeps focus on Retry", async ({ page }) => {
@@ -426,6 +426,139 @@ test.describe("picture failure and recovery", () => {
       expect(measured.cls, state).toBeLessThanOrEqual(0.1);
       expect(measured.all, state).toBeLessThanOrEqual(0.1);
     }
+  });
+});
+
+test.describe("a narrow picture with a long description, on a phone", () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+  const NARROW_ALT =
+    "Fixture long description of a tall, narrow picture: a lighthouse painted in white and red stripes standing on dark rocks, with a small keeper's cottage at its foot and a wide grey sea stretching to the horizon behind it under a cloudy sky.";
+
+  /** Whether each part of the failure panel is fully inside the frame and the screen. */
+  function failurePanel(page: Page) {
+    return page.evaluate(() => {
+      const rect = (element: Element | null) =>
+        element?.getBoundingClientRect();
+      const frame = rect(document.querySelector(".slide-image"));
+      const inside = (element: Element | null) => {
+        const box = rect(element);
+        return (
+          box !== undefined &&
+          frame !== undefined &&
+          box.top >= frame.top &&
+          box.bottom <= frame.bottom &&
+          box.left >= frame.left &&
+          box.right <= frame.right &&
+          box.top >= 0 &&
+          box.bottom <= window.innerHeight &&
+          box.left >= 0 &&
+          box.right <= document.documentElement.clientWidth
+        );
+      };
+      const button = document.querySelector(".slide-image__failed button");
+      const buttonBox = rect(button);
+      return {
+        messageVisible: inside(document.querySelector(".slide-image__message")),
+        buttonVisible: inside(button),
+        buttonSize: [buttonBox?.width ?? 0, buttonBox?.height ?? 0],
+        frameWidth: frame?.width ?? 0,
+      };
+    });
+  }
+
+  test("the message and Retry fit; the description can be scrolled to; Retry works by keyboard", async ({
+    page,
+  }) => {
+    const network = await pictures(page, "fail");
+    await open(page, "reveal-narrow");
+    const panel = page.locator(".slide-image__failed");
+    await expect(panel.getByText(ui.slides.image.failed)).toBeVisible();
+
+    const facts = await failurePanel(page);
+    expect(facts.messageVisible).toBe(true);
+    expect(facts.buttonVisible).toBe(true);
+    expect(facts.buttonSize[0]).toBeGreaterThanOrEqual(44);
+    expect(facts.buttonSize[1]).toBeGreaterThanOrEqual(44);
+
+    // The whole description is reachable by keyboard: the panel takes
+    // focus and End scrolls it until the last line is inside the panel.
+    await retryButton(page).focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect(panel).toBeFocused();
+    expect(await focusRing(page)).toEqual({ style: "solid", width: 4 });
+    const overflows = await panel.evaluate(
+      (element) => element.scrollHeight > element.clientHeight,
+    );
+    expect(overflows).toBe(true);
+    await page.keyboard.press("End");
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const box = document
+            .querySelector(".slide-image__failed")
+            ?.getBoundingClientRect();
+          const text = document
+            .querySelector(".slide-image__alt")
+            ?.getBoundingClientRect();
+          return (
+            box !== undefined &&
+            text !== undefined &&
+            text.bottom <= box.bottom + 1
+          );
+        }),
+      )
+      .toBe(true);
+    await expect(position(page)).toHaveText("Slide 5 of 6");
+
+    // Keyboard: from Reveal back to Retry, then Enter once the picture is back.
+    await revealButton(page).focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect(retryButton(page)).toBeFocused();
+    network.set("serve");
+    await page.keyboard.press("Enter");
+    await expect(page.getByAltText(NARROW_ALT)).toBeVisible();
+    await expect(page.getByAltText(NARROW_ALT)).toBeFocused();
+  });
+
+  test("the frame and Reveal stay put while loading, failed, retrying and recovered", async ({
+    page,
+  }) => {
+    const network = await pictures(page, "hold");
+    await open(page, "reveal-narrow");
+    const loading = await geometry(page);
+    await network.release();
+    await expect(page.getByAltText(NARROW_ALT)).toBeVisible();
+    expect(await geometry(page)).toEqual(loading);
+
+    network.set("fail");
+    await open(page, "reveal-narrow");
+    await expect(retryButton(page)).toBeVisible();
+    expect(await geometry(page)).toEqual(loading);
+
+    network.set("hold");
+    await retryButton(page).click();
+    await expect(
+      page.getByRole("button", { name: ui.slides.image.retrying }),
+    ).toBeVisible();
+    expect(await geometry(page)).toEqual(loading);
+
+    await network.release();
+    await expect(page.getByAltText(NARROW_ALT)).toBeVisible();
+    expect(await geometry(page)).toEqual(loading);
+
+    // The picture itself keeps its own narrow shape inside the frame.
+    const shown = await page
+      .getByAltText(NARROW_ALT)
+      .evaluate(
+        (image: HTMLImageElement) => image.naturalWidth / image.naturalHeight,
+      );
+    expect(shown).toBeCloseTo(120 / 480, 2);
+    const slideScrolls = await page.evaluate(() => {
+      const area = document.querySelector(".player__slide");
+      return area !== null && area.scrollHeight > area.clientHeight + 1;
+    });
+    expect(slideScrolls).toBe(false);
+    await expectNoBlockingAxe(page);
   });
 });
 

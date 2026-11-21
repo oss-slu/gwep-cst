@@ -1,19 +1,38 @@
 /*
- * The frame takes the picture's shape before anything loads, at most the
- * picture's own width and a share of the screen's height, so the slide
- * never shifts when the picture arrives, fails or loads again.
+ * The frame's size comes only from the content's width and height, never
+ * from what has loaded, so the slide does not shift when the picture
+ * arrives, fails or loads again.
+ *
+ * --picture-width is the picture's displayed width: at most the slide's
+ * width, the file's own width, and what fits in a share of the screen's
+ * height. The frame is at least that picture and at least big enough for
+ * the "didn't load" message and its button, so a narrow or tall picture
+ * still leaves room for them. The picture is drawn inside at its own shape.
  */
+.slide-image-area {
+  container-type: inline-size;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
 .slide-image {
   --image-max-height: 38vh;
-  position: relative;
-  box-sizing: border-box;
-  width: min(
-    100%,
+  --fallback-width: 18rem;
+  --fallback-height: 12rem;
+  --picture-width: min(
+    100cqi,
     var(--image-width),
     calc(var(--image-max-height) * var(--image-shape))
   );
-  aspect-ratio: var(--image-ratio);
-  flex-shrink: 0;
+  position: relative;
+  box-sizing: border-box;
+  width: max(min(100cqi, var(--fallback-width)), var(--picture-width));
+  height: max(
+    var(--fallback-height),
+    calc(var(--picture-width) / var(--image-shape))
+  );
 }
 
 .slide-image__picture {
@@ -28,6 +47,11 @@
   opacity: 0;
 }
 
+/*
+ * The message and the button come first, so they are always inside the
+ * reserved space. A long description follows and scrolls within the panel
+ * if it needs more room; "safe" keeps the top in view when it overflows.
+ */
 .slide-image__failed {
   position: absolute;
   inset: 0;
@@ -35,7 +59,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
   gap: 0.5rem;
   padding: 0.5rem;
   overflow: auto;

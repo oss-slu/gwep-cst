@@ -40,61 +40,72 @@ export function SlideImage({ image }: { readonly image: Image }) {
   const failed = status === "failed" || status === "retrying";
   const frame = {
     "--image-width": `${String(image.width)}px`,
-    "--image-ratio": `${String(image.width)} / ${String(image.height)}`,
     "--image-shape": image.width / image.height,
   } as CSSProperties;
 
   return (
-    <div className="slide-image" style={frame}>
-      {status !== "failed" && (
-        <img
-          key={attempt}
-          ref={picture}
-          className={
-            status === "loaded"
-              ? "slide-image__picture"
-              : "slide-image__picture slide-image__picture--pending"
-          }
-          src={image.src}
-          srcSet={image.variants === undefined ? undefined : srcSet(image)}
-          sizes="(min-width: 64rem) 50vw, 90vw"
-          width={image.width}
-          height={image.height}
-          alt={image.alt}
-          tabIndex={-1}
-          onLoad={() => {
-            if (status === "retrying") {
-              focusPicture.current =
-                document.activeElement === retryButton.current;
+    <div className="slide-image-area">
+      <div className="slide-image" style={frame}>
+        {status !== "failed" && (
+          <img
+            key={attempt}
+            ref={picture}
+            className={
+              status === "loaded"
+                ? "slide-image__picture"
+                : "slide-image__picture slide-image__picture--pending"
             }
-            setStatus("loaded");
-          }}
-          onError={() => {
-            setStatus("failed");
-          }}
-        />
-      )}
-      {failed && (
-        <div className="slide-image__failed">
-          <p className="slide-image__message">{ui.slides.image.failed}</p>
-          {image.alt !== "" && <p className="slide-image__alt">{image.alt}</p>}
-          <button
-            ref={retryButton}
-            type="button"
-            className="button"
-            aria-disabled={status === "retrying"}
-            onClick={() => {
-              if (status === "retrying") return;
-              setStatus("retrying");
-              setAttempt((count) => count + 1);
+            src={image.src}
+            srcSet={image.variants === undefined ? undefined : srcSet(image)}
+            sizes="(min-width: 64rem) 50vw, 90vw"
+            width={image.width}
+            height={image.height}
+            alt={image.alt}
+            tabIndex={-1}
+            onLoad={() => {
+              if (status === "retrying") {
+                focusPicture.current =
+                  document.activeElement === retryButton.current;
+              }
+              setStatus("loaded");
             }}
+            onError={() => {
+              setStatus("failed");
+            }}
+          />
+        )}
+        {failed && (
+          // Focusable, so a long description can be scrolled with the up and
+          // down arrows or End (the player only uses left, right and the page
+          // keys).
+          <div
+            className="slide-image__failed"
+            role="region"
+            aria-label={ui.slides.image.failed}
+            tabIndex={0}
           >
-            {status === "retrying"
-              ? ui.slides.image.retrying
-              : ui.slides.image.retry}
-          </button>
-        </div>
-      )}
+            <p className="slide-image__message">{ui.slides.image.failed}</p>
+            <button
+              ref={retryButton}
+              type="button"
+              className="button"
+              aria-disabled={status === "retrying"}
+              onClick={() => {
+                if (status === "retrying") return;
+                setStatus("retrying");
+                setAttempt((count) => count + 1);
+              }}
+            >
+              {status === "retrying"
+                ? ui.slides.image.retrying
+                : ui.slides.image.retry}
+            </button>
+            {image.alt !== "" && (
+              <p className="slide-image__alt">{image.alt}</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

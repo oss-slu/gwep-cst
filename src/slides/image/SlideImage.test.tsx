@@ -18,9 +18,11 @@ const retryButton = () => screen.getByRole("button");
 describe("SlideImage", () => {
   it("reserves the picture's shape and passes its size to the browser", () => {
     const { container } = render(<SlideImage image={image} />);
-    const frame = container.firstElementChild as HTMLElement;
-    expect(frame.style.getPropertyValue("--image-ratio")).toBe("1600 / 1200");
-    expect(frame.style.getPropertyValue("--image-width")).toBe("1600px");
+    const frame = container.querySelector<HTMLElement>(".slide-image");
+    expect(frame?.style.getPropertyValue("--image-shape")).toBe(
+      String(1600 / 1200),
+    );
+    expect(frame?.style.getPropertyValue("--image-width")).toBe("1600px");
     expect(picture().getAttribute("width")).toBe("1600");
     expect(picture().getAttribute("height")).toBe("1200");
     expect(picture().hasAttribute("srcset")).toBe(false);
@@ -49,6 +51,15 @@ describe("SlideImage", () => {
     expect(screen.getByText(image.alt)).toBeDefined();
     expect(retryButton().textContent).toBe(retry);
     expect(screen.queryByRole("img")).toBeNull();
+    // A focusable region, so a long description can be scrolled by keyboard;
+    // the button comes before the description so it is always in view.
+    const panel = screen.getByRole("region", { name: failed });
+    expect(panel.tabIndex).toBe(0);
+    expect([...panel.children].map((child) => child.tagName)).toEqual([
+      "P",
+      "BUTTON",
+      "P",
+    ]);
   });
 
   it("while retrying keeps the button (and its focus) and loads a new picture", () => {
