@@ -378,6 +378,30 @@ test.describe("picture failure and recovery", () => {
     await expect(revealButton(page)).toBeFocused();
   });
 
+  test("a slow recovery while reading the description in the panel moves focus to the picture", async ({
+    page,
+  }) => {
+    const network = await pictures(page, "fail");
+    await open(page, "reveal");
+    network.set("hold");
+    await retryButton(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("button", { name: ui.slides.image.retrying }),
+    ).toBeVisible();
+    // Back from Retry to the panel, as when reading a long description.
+    await page.keyboard.press("Shift+Tab");
+    await expect(
+      page.getByRole("region", { name: ui.slides.image.failed }),
+    ).toBeFocused();
+
+    await network.release();
+    const picture = page.getByAltText(ALT);
+    await expect(picture).toBeVisible();
+    await expect(page.locator(".slide-image__failed")).toHaveCount(0);
+    await expect(picture).toBeFocused();
+  });
+
   test("the picture's space and the Reveal button stay put through loading, failure, retry and recovery; CLS within 0.1", async ({
     page,
   }) => {

@@ -23,12 +23,13 @@ export function SlideImage({ image }: { readonly image: Image }) {
   const [status, setStatus] = useState<Status>("loading");
   // Each attempt renders a new <img>, so the browser requests the file again.
   const [attempt, setAttempt] = useState(0);
-  const retryButton = useRef<HTMLButtonElement>(null);
+  const failurePanel = useRef<HTMLDivElement>(null);
   const picture = useRef<HTMLImageElement>(null);
-  // True when the picture came back while the facilitator was still on the
-  // retry button. That button then disappears, so focus moves to the
-  // picture. If they had moved on (to Reveal or the player controls),
-  // focus stays where they put it.
+  // True when the picture came back while focus was still in the failure
+  // panel (on Retry, or on the panel while reading the description). The
+  // panel then disappears, so focus moves to the picture. If the
+  // facilitator had moved on (to Reveal or the player controls), focus
+  // stays where they put it.
   const focusPicture = useRef(false);
 
   useEffect(() => {
@@ -65,7 +66,8 @@ export function SlideImage({ image }: { readonly image: Image }) {
             onLoad={() => {
               if (status === "retrying") {
                 focusPicture.current =
-                  document.activeElement === retryButton.current;
+                  failurePanel.current?.contains(document.activeElement) ??
+                  false;
               }
               setStatus("loaded");
             }}
@@ -79,6 +81,7 @@ export function SlideImage({ image }: { readonly image: Image }) {
           // down arrows or End (the player only uses left, right and the page
           // keys).
           <div
+            ref={failurePanel}
             className="slide-image__failed"
             role="region"
             aria-label={ui.slides.image.failed}
@@ -86,7 +89,6 @@ export function SlideImage({ image }: { readonly image: Image }) {
           >
             <p className="slide-image__message">{ui.slides.image.failed}</p>
             <button
-              ref={retryButton}
               type="button"
               className="button"
               aria-disabled={status === "retrying"}

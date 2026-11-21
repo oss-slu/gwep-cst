@@ -88,6 +88,18 @@ describe("SlideImage", () => {
     expect(document.activeElement).toBe(picture());
   });
 
+  it("moves focus to the picture when it loads while the panel itself has focus", () => {
+    render(<SlideImage image={image} />);
+    fireEvent.error(picture());
+    fireEvent.click(retryButton());
+    const panel = screen.getByRole("region", { name: failed });
+    panel.focus();
+    fireEvent.load(picture());
+
+    expect(screen.queryByRole("region")).toBeNull();
+    expect(document.activeElement).toBe(picture());
+  });
+
   it("leaves focus alone when the facilitator moved on before it loaded", () => {
     render(
       <>
