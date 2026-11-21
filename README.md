@@ -12,6 +12,8 @@ npx playwright install chromium
 npm run dev
 ```
 
+To build with media under `public/media/`, or to run the media tests, you also need FFmpeg (`ffmpeg` and `ffprobe`) on `PATH`. See [Media](#media).
+
 The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=true`). npm therefore also skips `pre*` and `post*` script hooks, so every check is a script you call by name.
 
 ## Commands
@@ -19,7 +21,7 @@ The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=
 | Command             | What it does                                                  |
 | ------------------- | ------------------------------------------------------------- |
 | `npm run dev`       | Start the development server                                  |
-| `npm run build`     | Type-check, then build for production into `dist/`            |
+| `npm run build`     | Check content and media, type-check, then build for production into `dist/` |
 | `npm run preview`   | Serve the production build locally                            |
 | `npm run lint`      | ESLint and Prettier check                                     |
 | `npm run format`    | Format files with Prettier                                    |
@@ -28,6 +30,7 @@ The repository's `.npmrc` turns off dependency install scripts (`ignore-scripts=
 | `npm run test:timezones` | Calendar date tests, once per time zone, each in a process started with `TZ` set |
 | `npm run test:e2e`  | Browser and accessibility tests (Playwright with axe-core)    |
 | `npm run validate-content` | Check every file in `content/sessions/` against the content schema |
+| `npm run validate-media` | Check every file in `public/media/` against the media rules (needs FFmpeg when there is media) |
 | `npm run cms:generate` | Regenerate `public/admin/config.yml` from the slide registry |
 | `npm run cms:check` | Fail if `public/admin/config.yml` is out of date (runs in CI) |
 | `npm run check:bundle` | Fail if the initial JavaScript is over 100 kB gzip (run after `build`) |
@@ -45,6 +48,21 @@ The calendar slides show today's date as plain large text, with no marks around 
 
 Code in `src/content/` and `src/slides/` imports with explicit `.ts` extensions, because the scripts run it directly with Node. Slide modules are `.ts` files that load their component with `import()`, so Node never loads React components.
 
+## Media
+
+Pictures and sounds live in `public/media/<folder>/<file>`. `npm run validate-media` runs before every production build and in CI, and stops the build on any problem, printed as `file: problem and the limit it breaks`. It runs only at build time; nothing is added to the app.
+
+| Rule | Limit |
+| --- | --- |
+| Pictures | `.jpg`, `.jpeg`, `.png`, `.webp` or `.avif`, whose contents really are that format and decode fully; at most 2,000,000 bytes and 16,000,000 pixels (read from the header before decoding, and enforced again by the decoder). Above 500,000 bytes prints a warning (a target, not a limit) |
+| Sounds | `.mp3` (MP3), `.m4a` (AAC) or `.ogg` (Vorbis or Opus), with exactly one mono audio stream and no cover art; at most 5,000,000 bytes per clip |
+| Loudness | Integrated loudness from -17.0 to -15.0 LUFS (target -16), and true peak at or below -1.0 dBTP, as measured by FFmpeg's `loudnorm` filter (ITU-R BS.1770). A clip that cannot be measured, for example silence or under 0.4 s, fails |
+| References | Every `/media/` path in `content/sessions/*.json` must be a file that passed these checks |
+
+Sizes are decimal: 1 MB = 1,000,000 bytes. Files must be regular files (not symbolic links), and other files, including hidden ones such as `.DS_Store`, fail.
+
+The check uses FFmpeg 6 or later. CI installs Ubuntu's `ffmpeg` package on `ubuntu-24.04` and logs the version. Locally, use `brew install ffmpeg` on macOS, or, without admin rights, a release build from [ffmpeg.martin-riedl.de](https://ffmpeg.martin-riedl.de): download `ffmpeg.zip` and `ffprobe.zip` and their `.sha256` files, check them with `shasum -a 256 -c`, unzip into a folder you own (for example `~/.local/ffmpeg`), and add it to `PATH`. Without FFmpeg, `validate-media` fails with install instructions when there is media to check; the media tests are skipped outside CI.
+
 ## CMS config
 
 `public/admin/config.yml` is generated from the slide modules by `npm run cms:generate`; never edit it by hand. CI runs `npm run cms:check`, which fails if the committed file is out of date. The file is JSON, which is also valid YAML.
@@ -55,7 +73,7 @@ Every pull request and every push to `main` runs the CI workflow, `.github/workf
 
 | Check | What it runs |
 | --- | --- |
-| `checks` | `npm ci`, lint, typecheck, unit tests, build, bundle budget |
+| `checks` | `npm ci`, FFmpeg, lint, typecheck, content and media checks, unit tests, build, bundle budget |
 | `e2e` | Playwright with axe, including the security-header test |
 | `audit` | `npm audit --audit-level=high` (fails on high or critical findings) |
 | `lighthouse` | Lighthouse budgets; reports are kept as workflow artifacts, never uploaded publicly |
