@@ -109,9 +109,6 @@ function Player<S extends AnySlide>({
   // focus where it is. Any other arrival (a link, a typed address, Back or
   // Forward) moves focus to the slide.
   const keepFocus = useRef(false);
-  // Set by "Try again" on a slide that failed to download. Its button goes
-  // away, so focus returns to the slide once the slide appears.
-  const focusSlideWhenShown = useRef(false);
 
   const total = session.slides.length;
   const position = format(ui.player.position, { current: index + 1, total });
@@ -162,30 +159,17 @@ function Player<S extends AnySlide>({
         aria-label={position}
         className="player__slide"
       >
-        {/* The key gives each slide its own boundary and component, so the
-            previous slide unmounts and only the current one is mounted. */}
-        <ErrorBoundary
+        {/* The key gives each slide its own frame, so the previous slide
+            unmounts, only the current one is mounted, and nothing a slide
+            was waiting for carries over to the next. */}
+        <SlideFrame
           key={slide.id}
-          onRetry={() => {
-            focusSlideWhenShown.current = true;
-            data.forgetFailures();
+          data={data}
+          slide={slide}
+          focusSlideArea={() => {
+            slideArea.current?.focus();
           }}
-          fallback={(failure) => (
-            <LoadErrorView {...failure} level={2} backLink={false} />
-          )}
-        >
-          <Suspense fallback={<Loading />}>
-            <SlideContent
-              data={data}
-              slide={slide}
-              onShown={() => {
-                if (!focusSlideWhenShown.current) return;
-                focusSlideWhenShown.current = false;
-                slideArea.current?.focus();
-              }}
-            />
-          </Suspense>
-        </ErrorBoundary>
+        />
       </section>
       <nav aria-label={ui.player.controls} className="player__controls">
         <button
@@ -213,6 +197,45 @@ function Player<S extends AnySlide>({
         </button>
       </nav>
     </main>
+  );
+}
+
+/** One slide with its own error boundary, loading state and retry. */
+function SlideFrame<S extends AnySlide>({
+  data,
+  slide,
+  focusSlideArea,
+}: {
+  readonly data: PlayerData<S>;
+  readonly slide: S;
+  readonly focusSlideArea: () => void;
+}) {
+  // Set by "Try again". Its button goes away, so focus returns to the slide
+  // area once this slide appears. It belongs to this slide only: moving to
+  // another slide unmounts this frame and discards it.
+  const focusWhenShown = useRef(false);
+  return (
+    <ErrorBoundary
+      onRetry={() => {
+        focusWhenShown.current = true;
+        data.forgetFailures();
+      }}
+      fallback={(failure) => (
+        <LoadErrorView {...failure} level={2} backLink={false} />
+      )}
+    >
+      <Suspense fallback={<Loading />}>
+        <SlideContent
+          data={data}
+          slide={slide}
+          onShown={() => {
+            if (!focusWhenShown.current) return;
+            focusWhenShown.current = false;
+            focusSlideArea();
+          }}
+        />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

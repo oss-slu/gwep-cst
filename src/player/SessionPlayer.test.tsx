@@ -287,4 +287,35 @@ describe("session player", () => {
     expect(await screen.findByText("Fixture slide one")).toBeDefined();
     expect(document.activeElement).toBe(slideArea("Slide 1 of 3"));
   });
+
+  it("does not carry a pending retry's focus over to another slide", async () => {
+    // Slides one and two share a type, so both wait on the same retried
+    // download, which stays pending until the facilitator has moved on.
+    let finishRetry: (component: SlideComponent<Slide>) => void = () => {};
+    const [first] = session.slides;
+    if (first === undefined) throw new Error("The fixture has slides");
+    const component = await testRegistry.loadComponent(first);
+    const loadComponent = vi
+      .fn<(slide: Slide) => Promise<SlideComponent<Slide>>>()
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          finishRetry = resolve;
+        }),
+      );
+    await setup("/sessions/orientation/one", { loadComponent });
+    await click(
+      await screen.findByRole("button", { name: ui.errors.loadFailed.retry }),
+    );
+
+    nextButton().focus();
+    await click(nextButton());
+    await act(async () => {
+      finishRetry(component);
+      await Promise.resolve();
+    });
+
+    expect(await screen.findByText("Fixture slide two")).toBeDefined();
+    expect(document.activeElement).toBe(nextButton());
+  });
 });
