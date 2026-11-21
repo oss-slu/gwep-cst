@@ -29,6 +29,13 @@ export const siteSchema = z.strictObject({
     slides: z.strictObject({
       reveal: z.strictObject({ show: text, hide: text }),
       image: z.strictObject({ failed: text, retry: text, retrying: text }),
+      sound: z.strictObject({
+        play: text,
+        stop: text,
+        retry: text,
+        loading: text,
+        failed: text,
+      }),
     }),
     errors: z.strictObject({
       pageNotFound: message,

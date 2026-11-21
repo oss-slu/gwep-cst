@@ -110,7 +110,7 @@ test.describe("weather thermometer", () => {
     ] as const) {
       await page.keyboard.press(key);
       await expect(slider, key).toHaveAttribute("aria-valuetext", level);
-      await expect(position(page), key).toHaveText("Slide 2 of 6");
+      await expect(position(page), key).toHaveText("Slide 2 of 7");
     }
   });
 
@@ -129,7 +129,7 @@ test.describe("weather thermometer", () => {
       });
     });
     await page.keyboard.press("PageDown");
-    await expect(position(page)).toHaveText("Slide 3 of 6");
+    await expect(position(page)).toHaveText("Slide 3 of 7");
     expect(
       await page.evaluate(
         () => (window as unknown as { markerMoves: number }).markerMoves,
@@ -139,7 +139,7 @@ test.describe("weather thermometer", () => {
     await open(page, "weather");
     await thermometer(page).focus();
     await page.keyboard.press("PageUp");
-    await expect(position(page)).toHaveText("Slide 1 of 6");
+    await expect(position(page)).toHaveText("Slide 1 of 7");
   });
 
   test("one click on a level's words or on the tube sets the marker", async ({
@@ -160,7 +160,7 @@ test.describe("weather thermometer", () => {
     point = await centre(".thermometer__segment", "Fixture cold");
     await page.mouse.click(point.x, point.y);
     await expect(slider).toHaveAttribute("aria-valuetext", "Fixture cold");
-    await expect(position(page)).toHaveText("Slide 2 of 6");
+    await expect(position(page)).toHaveText("Slide 2 of 7");
   });
 
   test("every level is a target at least 44 px tall and the full width", async ({
@@ -204,7 +204,7 @@ test.describe("weather by touch", () => {
       "aria-valuetext",
       "Fixture cool",
     );
-    await expect(position(page)).toHaveText("Slide 2 of 6");
+    await expect(position(page)).toHaveText("Slide 2 of 7");
   });
 });
 
@@ -235,7 +235,7 @@ test.describe("reveal", () => {
     await page.keyboard.press("Space");
     await expect(page.getByText("Fixture answer")).toHaveCount(0);
     await expect(revealButton(page)).toBeFocused();
-    await expect(position(page)).toHaveText("Slide 3 of 6");
+    await expect(position(page)).toHaveText("Slide 3 of 7");
   });
 
   test("a click reveals the answer without moving the picture or the button", async ({
@@ -350,7 +350,7 @@ test.describe("picture failure and recovery", () => {
     await expect(retryButton(page)).toHaveCount(0);
     await expect(picture).toBeFocused();
     await expect(page.getByText("Fixture answer")).toBeVisible();
-    await expect(position(page)).toHaveText("Slide 3 of 6");
+    await expect(position(page)).toHaveText("Slide 3 of 7");
   });
 
   test("Retry failing again keeps focus on Retry", async ({ page }) => {
@@ -532,7 +532,7 @@ test.describe("a narrow picture with a long description, on a phone", () => {
         }),
       )
       .toBe(true);
-    await expect(position(page)).toHaveText("Slide 5 of 6");
+    await expect(position(page)).toHaveText("Slide 5 of 7");
 
     // Keyboard: from Reveal back to Retry, then Enter once the picture is back.
     await revealButton(page).focus();

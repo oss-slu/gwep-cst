@@ -4,8 +4,8 @@
   "title": "Fixture: Childhood",
   "slides": [
     {
-      "type": "sounds",
-      "id": "sounds"
+      "type": "drag-drop",
+      "id": "sort"
     }
   ]
 }

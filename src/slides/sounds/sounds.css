@@ -1,0 +1,46 @@
+.sounds__clips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+  width: min(100%, 60rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sounds__clip {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px solid var(--color-muted);
+  border-radius: 0.75rem;
+}
+
+.sounds__description {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.25rem + 1vw, 2.25rem);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+/* Play, Stop and Try again share one cell, so the button never resizes. */
+.sounds__button {
+  display: inline-grid;
+}
+
+.sounds__button > span {
+  grid-area: 1 / 1;
+}
+
+.sounds__label--hidden {
+  visibility: hidden;
+}
+
+/* Always one line tall, so a message appearing moves nothing. */
+.sounds__status {
+  min-height: 1.5em;
+  margin: 0;
+}

@@ -4,6 +4,7 @@ import { BackToSessions } from "../app/BackToSessions.tsx";
 import { format, ui } from "../app/copy.ts";
 import { LoadErrorView } from "../app/LoadErrorView.tsx";
 import { slidePath } from "../app/paths.ts";
+import { AudioProvider, useAudio } from "../media/AudioProvider.tsx";
 import { ErrorBoundary } from "../ui/ErrorBoundary.tsx";
 import { Loading } from "../ui/Loading.tsx";
 import { StatusMessage } from "../ui/StatusMessage.tsx";
@@ -89,7 +90,13 @@ function LoadedSession<S extends AnySlide>({
     );
   }
 
-  return <Player data={data} session={session} slide={slide} index={index} />;
+  // One audio player per session view: stopped on every slide change and
+  // released when the session closes.
+  return (
+    <AudioProvider>
+      <Player data={data} session={session} slide={slide} index={index} />
+    </AudioProvider>
+  );
 }
 
 function Player<S extends AnySlide>({
@@ -104,6 +111,7 @@ function Player<S extends AnySlide>({
   readonly index: number;
 }) {
   const [, navigate] = useLocation();
+  const audio = useAudio();
   const slideArea = useRef<HTMLElement>(null);
   // Set by the Previous and Next buttons and the slide keys, which leave
   // focus where it is. Any other arrival (a link, a typed address, Back or
@@ -128,6 +136,12 @@ function Player<S extends AnySlide>({
       goTo(index + 1);
     },
   );
+
+  // Moving to another slide stops any sound. The slide that played it has
+  // unmounted, so nothing would be left to stop it.
+  useEffect(() => {
+    audio.stop();
+  }, [audio, slide.id]);
 
   useEffect(() => {
     const area = slideArea.current;

@@ -323,6 +323,62 @@
                   "hint": "Hidden until the facilitator presses Reveal answer."
                 }
               ]
+            },
+            {
+              "name": "sounds",
+              "label": "Sounds: play clips and guess",
+              "widget": "object",
+              "fields": [
+                {
+                  "name": "id",
+                  "label": "Slide id",
+                  "widget": "string",
+                  "hint": "A short name for this slide, such as landmark-1. Use lowercase letters, digits and hyphens. Keep it the same after the slide is published.",
+                  "pattern": [
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "Use lowercase letters, digits and single hyphens"
+                  ]
+                },
+                {
+                  "name": "notes",
+                  "label": "Facilitator notes",
+                  "widget": "text",
+                  "required": false,
+                  "hint": "Shown to the facilitator only, never to the group."
+                },
+                {
+                  "name": "heading",
+                  "label": "Question",
+                  "widget": "string",
+                  "hint": "The words above the sounds, for example: What can you hear?"
+                },
+                {
+                  "name": "clips",
+                  "label": "Sounds",
+                  "widget": "list",
+                  "hint": "Between 1 and 6 sounds. Each has its own Play button and is shown with its description.",
+                  "fields": [
+                    {
+                      "name": "sound",
+                      "label": "Sound",
+                      "widget": "object",
+                      "fields": [
+                        {
+                          "name": "src",
+                          "label": "Sound file",
+                          "widget": "file"
+                        },
+                        {
+                          "name": "description",
+                          "label": "Sound description",
+                          "widget": "string",
+                          "hint": "Say in words what the sound is, for people who cannot hear it."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }

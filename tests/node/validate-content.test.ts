@@ -67,10 +67,10 @@ describe("validate-content", () => {
   it("rejects slides of unregistered types; there is no fallback schema", async () => {
     const result = await runValidator(fixture("unregistered-types"));
     const registered =
-      "Registered types: title, calendar-day, calendar-month, calendar-year, weather, reveal";
+      "Registered types: title, calendar-day, calendar-month, calendar-year, weather, reveal, sounds";
     expect(result.code).toBe(1);
     expect(result.stderr).toContain(
-      `${SESSIONS}/childhood.json: slides[0].type: Unknown slide type "sounds". ${registered}`,
+      `${SESSIONS}/childhood.json: slides[0].type: Unknown slide type "drag-drop". ${registered}`,
     );
     expect(result.stderr).toContain(
       `${SESSIONS}/orientation.json: slides[1].type: Unknown slide type "quiz". ${registered}`,

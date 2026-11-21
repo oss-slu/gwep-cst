@@ -51,6 +51,13 @@
         "failed": "This picture didn't load.",
         "retry": "Load picture again",
         "retrying": "Loading the picture…"
+      },
+      "sound": {
+        "play": "Play",
+        "stop": "Stop",
+        "retry": "Try again",
+        "loading": "Loading…",
+        "failed": "This sound didn't play."
       }
     }
   }
