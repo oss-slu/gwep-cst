@@ -71,16 +71,17 @@ export async function twoStreams(out: string): Promise<void> {
   ]);
 }
 
-/** A 64 x 48 picture in the format the extension implies. */
+/** A one-colour picture (64 x 48 unless given) in the extension's format. */
 export async function picture(
   out: string,
   codec: string[] = [],
+  size = "64x48",
 ): Promise<void> {
   await ffmpeg([
     "-f",
     "lavfi",
     "-i",
-    "color=c=0x2a5d8f:s=64x48:d=1",
+    `color=c=0x2a5d8f:s=${size}:d=1`,
     "-frames:v",
     "1",
     ...codec,

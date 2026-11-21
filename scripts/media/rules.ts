@@ -5,6 +5,12 @@ export const IMAGE_MAX_BYTES = 2_000_000;
 /** A performance target, not a limit: larger images pass with a warning. */
 export const IMAGE_TARGET_BYTES = 500_000;
 export const AUDIO_MAX_BYTES = 5_000_000;
+/**
+ * The most pixels a picture may have. The byte cap limits the file, but a
+ * small file can decode to a huge picture, so this bounds what decoding can
+ * allocate (about 64 MB at 4 bytes a pixel). A 4K picture is 8.3 million.
+ */
+export const IMAGE_MAX_PIXELS = 16_000_000;
 
 /** Integrated loudness: −16 LUFS ± 1 LU, inclusive. */
 export const LOUDNESS_MIN_LUFS = -17;
@@ -215,4 +221,138 @@ function parseMeasurement(value: string | undefined): number | undefined {
   if (value === undefined || value.trim() === "") return undefined;
   const number = Number(value);
   return Number.isFinite(number) ? number : undefined;
+}
+
+export interface Dimensions {
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * A picture's width and height read from its header, without decoding it.
+ * For AVIF, the largest size any image item declares. Undefined when the
+ * header cannot be read.
+ */
+export function imageDimensions(
+  bytes: Uint8Array,
+  format: ImageFormat,
+): Dimensions | undefined {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const fits = (offset: number, length: number) =>
+    offset + length <= bytes.length;
+  switch (format) {
+    case "png":
+      // IHDR is the first chunk: width and height at bytes 16 and 20.
+      return fits(16, 8)
+        ? { width: view.getUint32(16), height: view.getUint32(20) }
+        : undefined;
+    case "jpeg":
+      return jpegDimensions(bytes, view);
+    case "webp":
+      return webpDimensions(bytes, view);
+    case "avif":
+      return avifDimensions(bytes, view);
+  }
+}
+
+// Start-of-frame markers, which carry the size: C0 to CF except C4, C8, CC.
+function isStartOfFrame(marker: number): boolean {
+  return (
+    marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)
+  );
+}
+
+function jpegDimensions(
+  bytes: Uint8Array,
+  view: DataView,
+): Dimensions | undefined {
+  let offset = 2;
+  while (offset + 9 <= bytes.length) {
+    if (bytes[offset] !== 0xff) return undefined;
+    const marker = bytes[offset + 1] ?? 0;
+    if (marker === 0xff) {
+      offset += 1; // fill byte
+      continue;
+    }
+    if (isStartOfFrame(marker)) {
+      return {
+        height: view.getUint16(offset + 5),
+        width: view.getUint16(offset + 7),
+      };
+    }
+    if (marker === 0xd9 || marker === 0xda) return undefined; // end, or scan data
+    offset += 2 + view.getUint16(offset + 2);
+  }
+  return undefined;
+}
+
+function webpDimensions(
+  bytes: Uint8Array,
+  view: DataView,
+): Dimensions | undefined {
+  const chunk = String.fromCharCode(...bytes.subarray(12, 16));
+  if (chunk === "VP8X" && bytes.length >= 30) {
+    const uint24 = (offset: number) =>
+      (bytes[offset] ?? 0) |
+      ((bytes[offset + 1] ?? 0) << 8) |
+      ((bytes[offset + 2] ?? 0) << 16);
+    return { width: uint24(24) + 1, height: uint24(27) + 1 };
+  }
+  if (chunk === "VP8L" && bytes.length >= 25) {
+    const bits = view.getUint32(21, true);
+    return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
+  }
+  if (chunk === "VP8 " && bytes.length >= 30) {
+    return {
+      width: view.getUint16(26, true) & 0x3fff,
+      height: view.getUint16(28, true) & 0x3fff,
+    };
+  }
+  return undefined;
+}
+
+function avifDimensions(
+  bytes: Uint8Array,
+  view: DataView,
+): Dimensions | undefined {
+  // Every "ispe" (image spatial extents) property: 4-byte size and type,
+  // 4 bytes of version and flags, then width and height.
+  let largest: Dimensions | undefined;
+  for (let offset = 4; offset + 16 <= bytes.length; offset += 1) {
+    if (
+      bytes[offset] === 0x69 && // i
+      bytes[offset + 1] === 0x73 && // s
+      bytes[offset + 2] === 0x70 && // p
+      bytes[offset + 3] === 0x65 // e
+    ) {
+      const found = {
+        width: view.getUint32(offset + 8),
+        height: view.getUint32(offset + 12),
+      };
+      if (
+        largest === undefined ||
+        found.width * found.height > largest.width * largest.height
+      ) {
+        largest = found;
+      }
+    }
+  }
+  return largest;
+}
+
+/** The pixel limit, checked on the header's size before anything decodes. */
+export function checkPixels(
+  dimensions: Dimensions | undefined,
+): string | undefined {
+  if (
+    dimensions === undefined ||
+    dimensions.width === 0 ||
+    dimensions.height === 0
+  ) {
+    return "image size could not be read from its header";
+  }
+  const pixels = dimensions.width * dimensions.height;
+  return pixels > IMAGE_MAX_PIXELS
+    ? `image is ${String(dimensions.width)} x ${String(dimensions.height)} = ${String(pixels)} pixels, over the ${String(IMAGE_MAX_PIXELS)}-pixel limit`
+    : undefined;
 }

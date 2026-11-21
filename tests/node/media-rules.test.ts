@@ -3,11 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   AUDIO_MAX_BYTES,
   IMAGE_MAX_BYTES,
+  IMAGE_MAX_PIXELS,
   IMAGE_TARGET_BYTES,
   checkAudioStreams,
   checkLoudness,
+  checkPixels,
   checkSize,
   classifyPath,
+  imageDimensions,
   imageFormatOf,
 } from "../../scripts/media/rules.ts";
 
@@ -204,5 +207,136 @@ describe("audio streams", () => {
     expect(checkAudioStreams("mp3", "mp3", [])).toEqual([
       "has 0 audio streams; exactly 1 is allowed",
     ]);
+  });
+});
+
+describe("picture size in pixels, read from the header before decoding", () => {
+  const u32 = (value: number) => [
+    value >>> 24,
+    (value >>> 16) & 255,
+    (value >>> 8) & 255,
+    value & 255,
+  ];
+  const u16 = (value: number) => [value >>> 8, value & 255];
+  const le16 = (value: number) => [value & 255, value >>> 8];
+  const le24 = (value: number) => [
+    value & 255,
+    (value >>> 8) & 255,
+    value >>> 16,
+  ];
+  const ascii = (text: string) => Array.from(new TextEncoder().encode(text));
+  const bytes = (...parts: number[][]) => new Uint8Array(parts.flat());
+
+  it("reads PNG, JPEG, WebP and AVIF headers", () => {
+    const png = bytes(
+      [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+      u32(13),
+      ascii("IHDR"),
+      u32(5000),
+      u32(4000),
+    );
+    expect(imageDimensions(png, "png")).toEqual({ width: 5000, height: 4000 });
+
+    // SOI, an APP0 segment to skip, then SOF0 with height then width.
+    const jpeg = bytes(
+      [0xff, 0xd8],
+      [0xff, 0xe0],
+      u16(4),
+      [0, 0],
+      [0xff, 0xc0],
+      u16(11),
+      [8],
+      u16(480),
+      u16(640),
+      [1, 1, 0x11, 0],
+    );
+    expect(imageDimensions(jpeg, "jpeg")).toEqual({ width: 640, height: 480 });
+
+    const riff = (chunk: string, body: number[]) =>
+      bytes(ascii("RIFF"), u32(0), ascii("WEBP"), ascii(chunk), u32(0), body);
+    expect(
+      imageDimensions(
+        riff("VP8X", [0, 0, 0, 0, ...le24(4999), ...le24(3999)]),
+        "webp",
+      ),
+    ).toEqual({ width: 5000, height: 4000 });
+    const vp8l = (4999 & 0x3fff) | ((3999 & 0x3fff) << 14);
+    expect(
+      imageDimensions(
+        riff("VP8L", [
+          0x2f,
+          vp8l & 255,
+          (vp8l >>> 8) & 255,
+          (vp8l >>> 16) & 255,
+          vp8l >>> 24,
+        ]),
+        "webp",
+      ),
+    ).toEqual({ width: 5000, height: 4000 });
+    expect(
+      imageDimensions(
+        riff("VP8 ", [0, 0, 0, 0x9d, 0x01, 0x2a, ...le16(640), ...le16(480)]),
+        "webp",
+      ),
+    ).toEqual({ width: 640, height: 480 });
+
+    // Two ispe properties (say a thumbnail and the main image): the largest counts.
+    const ispe = (width: number, height: number) => [
+      ...u32(20),
+      ...ascii("ispe"),
+      0,
+      0,
+      0,
+      0,
+      ...u32(width),
+      ...u32(height),
+    ];
+    const avif = bytes(
+      u32(20),
+      ascii("ftypavif"),
+      u32(0),
+      ascii("mif1"),
+      ispe(64, 48),
+      ispe(5000, 4000),
+    );
+    expect(imageDimensions(avif, "avif")).toEqual({
+      width: 5000,
+      height: 4000,
+    });
+  });
+
+  it("returns nothing when the header is cut short", () => {
+    expect(
+      imageDimensions(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), "png"),
+    ).toBeUndefined();
+    expect(
+      imageDimensions(new Uint8Array([0xff, 0xd8, 0xff, 0xda]), "jpeg"),
+    ).toBeUndefined();
+    expect(
+      imageDimensions(
+        bytes(ascii("RIFF"), u32(0), ascii("WEBP"), ascii("ALPH")),
+        "webp",
+      ),
+    ).toBeUndefined();
+    expect(
+      imageDimensions(bytes(u32(20), ascii("ftypavif")), "avif"),
+    ).toBeUndefined();
+  });
+
+  it("allows up to 16,000,000 pixels and rejects one row more", () => {
+    expect(IMAGE_MAX_PIXELS).toBe(16_000_000);
+    expect(checkPixels({ width: 4000, height: 4000 })).toBeUndefined();
+    expect(checkPixels({ width: 4000, height: 4001 })).toBe(
+      "image is 4000 x 4001 = 16004000 pixels, over the 16000000-pixel limit",
+    );
+  });
+
+  it("fails when the size cannot be read", () => {
+    expect(checkPixels(undefined)).toBe(
+      "image size could not be read from its header",
+    );
+    expect(checkPixels({ width: 0, height: 10 })).toBe(
+      "image size could not be read from its header",
+    );
   });
 });

@@ -10,8 +10,10 @@ import { join } from "node:path";
 import {
   checkAudioStreams,
   checkLoudness,
+  checkPixels,
   checkSize,
   classifyPath,
+  imageDimensions,
   imageFormatOf,
   type MediaType,
 } from "./media/rules.ts";
@@ -125,13 +127,20 @@ for (const check of checks) {
       continue;
     }
     if (check.kind === "image") {
-      const head = (await readFile(file)).subarray(0, 64);
-      const actual = imageFormatOf(head);
+      // At most 2 MB, checked above, so reading it whole is bounded.
+      const bytes = await readFile(file);
+      const actual = imageFormatOf(bytes.subarray(0, 64));
       if (actual !== check.format) {
         report(
           file,
           `file contents are ${actual ?? "not a supported image"}, not the ${check.format} format its extension says`,
         );
+        continue;
+      }
+      const pixelProblem = checkPixels(imageDimensions(bytes, check.format));
+      if (pixelProblem !== undefined) {
+        // Never handed to the decoder.
+        report(file, pixelProblem);
         continue;
       }
       const decodeError = await decodeImage(file);

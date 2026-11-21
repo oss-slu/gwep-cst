@@ -54,7 +54,7 @@ Pictures and sounds live in `public/media/<folder>/<file>`. `npm run validate-me
 
 | Rule | Limit |
 | --- | --- |
-| Pictures | `.jpg`, `.jpeg`, `.png`, `.webp` or `.avif`, whose contents really are that format and decode fully; at most 2,000,000 bytes. Above 500,000 bytes prints a warning (a target, not a limit) |
+| Pictures | `.jpg`, `.jpeg`, `.png`, `.webp` or `.avif`, whose contents really are that format and decode fully; at most 2,000,000 bytes and 16,000,000 pixels (read from the header before decoding, and enforced again by the decoder). Above 500,000 bytes prints a warning (a target, not a limit) |
 | Sounds | `.mp3` (MP3), `.m4a` (AAC) or `.ogg` (Vorbis or Opus), with exactly one mono audio stream and no cover art; at most 5,000,000 bytes per clip |
 | Loudness | Integrated loudness from -17.0 to -15.0 LUFS (target -16), and true peak at or below -1.0 dBTP, as measured by FFmpeg's `loudnorm` filter (ITU-R BS.1770). A clip that cannot be measured, for example silence or under 0.4 s, fails |
 | References | Every `/media/` path in `content/sessions/*.json` must be a file that passed these checks |

@@ -5,6 +5,7 @@ import {
   mkdtemp,
   readFile,
   rm,
+  stat,
   symlink,
   writeFile,
 } from "node:fs/promises";
@@ -12,6 +13,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { imageDimensions, imageFormatOf } from "../../scripts/media/rules.ts";
+import { decodeImage } from "../../scripts/media/tools.ts";
 import {
   AAC,
   AVIF,
@@ -81,6 +84,10 @@ beforeAll(async () => {
     picture(at("ok.webp"), ["-c:v", "libwebp"]),
     picture(at("ok.avif"), AVIF),
     picture(at("big.png")),
+    // Small files (well under 2 MB) that decode to 20 million pixels.
+    picture(at("huge.png"), [], "5000x4000"),
+    picture(at("huge.jpg"), [], "5000x4000"),
+    picture(at("huge.webp"), ["-c:v", "libwebp"], "5000x4000"),
     picture(at("limit.png")),
     picture(at("over.png")),
     audio(at("ok.mp3"), tone(), MP3),
@@ -246,6 +253,41 @@ realMedia("validate-media with real files", () => {
       expect(result.stderr).not.toContain("public/media/test/a.png:");
     },
   );
+
+  it.each(["huge.png", "huge.jpg", "huge.webp"])(
+    "rejects %s, under 2 MB but over the pixel limit, before decoding",
+    async (name) => {
+      const { size } = await stat(join(library, name));
+      expect(size).toBeLessThan(2_000_000);
+      const dir = await project({ [name]: name });
+      const result = await validate(dir);
+      expect(result.code).toBe(1);
+      expect(result.stderr).toContain(
+        `public/media/test/${name}: image is 5000 x 4000 = 20000000 pixels, over the 16000000-pixel limit`,
+      );
+      // The header check stopped it, so no decoder message appears.
+      expect(result.stderr).not.toContain("could not be decoded");
+    },
+  );
+
+  it("reads the size of real files in every format", async () => {
+    for (const name of ["ok.png", "ok.jpg", "ok.webp", "ok.avif"]) {
+      const bytes = await readFile(join(library, name));
+      const format = imageFormatOf(bytes.subarray(0, 64));
+      expect(format, name).toBeDefined();
+      if (format === undefined) continue;
+      expect(imageDimensions(bytes, format), name).toEqual({
+        width: 64,
+        height: 48,
+      });
+    }
+  });
+
+  it("the decoder itself refuses a picture over the pixel limit (second guard)", async () => {
+    const error = await decodeImage(join(library, "huge.png"));
+    expect(error).toMatch(/exceeds specified max pixel count 16000000/);
+    expect(await decodeImage(join(library, "ok.png"))).toBeUndefined();
+  });
 
   it("measures the loudness of the passing tone inside the range, without rounding", async () => {
     const dir = await project({ "loud.mp3": "loud.mp3" });

@@ -3,7 +3,7 @@
 // output limit, so a hostile or broken file cannot run commands, read other
 // sources or hang the build.
 import { execFile } from "node:child_process";
-import type { AudioStream } from "./rules.ts";
+import { IMAGE_MAX_PIXELS, type AudioStream } from "./rules.ts";
 
 const TIMEOUT_MS = 60_000;
 const MAX_OUTPUT_BYTES = 1_000_000;
@@ -75,7 +75,9 @@ export async function checkTools(): Promise<string[]> {
 
 /**
  * Fully decodes the first picture. Any decoder error, including a cut-off
- * or damaged file with a correct signature, is returned.
+ * or damaged file with a correct signature, is returned. The decoder also
+ * refuses pictures over the pixel limit (a second guard: validate-media
+ * checks the header's size first).
  */
 export async function decodeImage(path: string): Promise<string | undefined> {
   const result = await run("ffmpeg", [
@@ -86,6 +88,8 @@ export async function decodeImage(path: string): Promise<string | undefined> {
     "-xerror",
     "-err_detect",
     "explode",
+    "-max_pixels",
+    String(IMAGE_MAX_PIXELS),
     ...input(path),
     "-frames:v",
     "1",
@@ -95,9 +99,13 @@ export async function decodeImage(path: string): Promise<string | undefined> {
   ]);
   const errors = result.stderr.trim();
   if (result.code === 0 && errors === "") return undefined;
-  return (
-    errors.split("\n").at(-1) ?? `ffmpeg exited with ${String(result.code)}`
-  );
+  // The first message is the cause; later ones repeat it or say nothing
+  // was written. Drop ffmpeg's "[codec @ 0x...]" prefixes.
+  const [first] = errors
+    .split("\n")
+    .map((line) => line.replace(/^(?:\[[^\]]*\]\s*)+/, "").trim())
+    .filter((line) => line !== "");
+  return first ?? `ffmpeg exited with ${String(result.code)}`;
 }
 
 export interface AudioProbe {
