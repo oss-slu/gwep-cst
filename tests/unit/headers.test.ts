@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import headersFile from "../../public/_headers?raw";
 import adminPage from "../../public/admin/index.html?raw";
-import { localAdminHeaders } from "../../scripts/cms/local-admin.ts";
+import { adminHeaders, isLoopbackHost } from "../../scripts/cms/local-admin.ts";
 import {
   effectiveHeaders,
   findRule,
@@ -142,10 +142,27 @@ describe("headers for the content editor at /admin", () => {
     }
   });
 
-  it("the local servers add only 'unsafe-eval' and the loopback backend", () => {
+  it("regular local servers send exactly the deployed /admin headers", () => {
+    for (const path of ["/admin", "/admin/", "/admin/index.html"]) {
+      expect(adminHeaders(rules, path, false)).toEqual(
+        effectiveHeaders(rules, path),
+      );
+    }
+  });
+
+  it("knows which server host settings listen on loopback only", () => {
+    for (const host of [undefined, false, "localhost", "127.0.0.1", "::1"]) {
+      expect(isLoopbackHost(host), String(host)).toBe(true);
+    }
+    for (const host of [true, "0.0.0.0", "192.168.1.20", "example.test"]) {
+      expect(isLoopbackHost(host), String(host)).toBe(false);
+    }
+  });
+
+  it("a verified demo copy on loopback adds only 'unsafe-eval' and the loopback backend", () => {
     for (const path of ["/admin", "/admin/", "/admin/index.html"]) {
       const local = directives(
-        localAdminHeaders(rules, path)["content-security-policy"] ?? "",
+        adminHeaders(rules, path, true)["content-security-policy"] ?? "",
       );
       const deployed = directives(adminPolicy(path));
       expect(local.get("script-src")).toBe(

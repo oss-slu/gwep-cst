@@ -83,15 +83,25 @@ Where each media file came from, and its rights, is recorded in `docs/MEDIA_PROV
 
 GWEP staff will edit content in Decap CMS at `/admin`. For now it runs only on your own computer, with no GitHub account, in a **disposable copy** of the repository, so edits never touch your working copy or GitHub. Production sign-in, publishing and previews are not set up yet.
 
-```sh
-# Once: make the copy next to this repository (refuses if it already exists)
-npm run cms:demo-copy
-cd ../gwep-cst-cms-demo
+Once, make the copy next to this repository (it refuses if the copy already exists, or a destination inside this repository):
 
-# Two terminals, both inside the copy (FFmpeg on PATH for the validators):
-npm run cms:local                          # Decap's local backend
-npm run dev -- --port 5173 --strictPort    # the site and the editor
+```sh
+npm run cms:demo-copy
 ```
+
+Then, in two terminals, both inside the copy (FFmpeg on `PATH` for the validators): Decap's local backend in one, the site and the editor in the other.
+
+```sh
+cd ../gwep-cst-cms-demo
+npm run cms:local
+```
+
+```sh
+cd ../gwep-cst-cms-demo
+npm run dev -- --port 5173 --strictPort
+```
+
+Type or paste the commands as shown, without trailing comments: zsh, the macOS shell, does not treat `#` as a comment when typing commands, so anything after it is passed to the command.
 
 Open http://localhost:5173/admin/ (use `localhost`, not `127.0.0.1`), choose **Login**, and edit. Saving creates a draft, set its status to **Ready**, then **Publish → Publish now**; each step is a commit in the copy's own git history, made as "CMS demo". The player at http://localhost:5173/ shows the change, and `npm run validate-content` and `npm run validate-media` in the copy check it.
 

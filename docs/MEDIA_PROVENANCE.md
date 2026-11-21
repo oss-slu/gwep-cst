@@ -46,4 +46,3 @@ Before presenting, play each sound once on the demo machine and room speakers to
 ## Content editor demo upload (M0-10)
 
 `tests/fixtures/media/cms-replacement.png` is the picture uploaded in the local content editor walkthrough and its browser test. It is `orientation/placeholder-2.png` scaled to 1000 x 750 with FFmpeg (`-vf scale=1000:750`), so it is the same original work under the same MIT license, and still reads "PLACEHOLDER IMAGE 2". It is never served by the site: it only lands in `public/media/orientation/` inside a disposable demo copy.
-

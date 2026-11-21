@@ -14,6 +14,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { demoAllowancesApply } from "../../scripts/cms/local-admin.ts";
 
 // The local CMS demo's safeguards, run for real: the disposable copy, the
 // launcher's checks, and the write boundary of decap-server in git mode.
@@ -89,6 +90,14 @@ describe("npm run cms:demo-copy", () => {
     );
   });
 
+  it("refuses a destination inside this repository, such as a stray '#'", async () => {
+    for (const destination of ["#", join(REPO, "content", "copy")]) {
+      const result = await node(COPY_SCRIPT, [destination], REPO);
+      expect(result.code, destination).toBe(1);
+      expect(result.stderr, destination).toContain("is inside this repository");
+    }
+  });
+
   it("refuses an existing destination", async () => {
     const again = await node(COPY_SCRIPT, [copy], REPO);
     expect(again.code).toBe(1);
@@ -141,6 +150,18 @@ describe("npm run cms:local refuses unsafe folders", () => {
     const result = await node(LOCAL_SCRIPT, [], plain);
     expect(result.code).toBe(1);
     expect(result.stderr).toContain("is not a git repository");
+  });
+});
+
+describe("the local editor allowances (vite.config.ts)", () => {
+  it("apply only to a disposable copy served on loopback", async () => {
+    expect(await demoAllowancesApply(copy, undefined)).toBe(true);
+    expect(await demoAllowancesApply(copy, "localhost")).toBe(true);
+    // Exposed to the network: never.
+    expect(await demoAllowancesApply(copy, true)).toBe(false);
+    expect(await demoAllowancesApply(copy, "0.0.0.0")).toBe(false);
+    // A regular checkout: never.
+    expect(await demoAllowancesApply(REPO, undefined)).toBe(false);
   });
 });
 

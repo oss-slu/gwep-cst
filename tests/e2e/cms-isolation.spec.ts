@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
+import { effectiveHeaders, parseHeadersFile } from "../../scripts/headers.ts";
 
 // The viewer never loads the content editor: no Decap code in its files and
 // no requests to unpkg, /admin or the local CMS backend, so it works the
@@ -37,5 +38,23 @@ test("walking through Orientation makes no editor or CMS requests", async ({
   for (const url of requests) {
     expect(url.origin, url.href).toBe("http://localhost:4173");
     expect(url.pathname, url.href).not.toMatch(/^\/admin/);
+  }
+});
+
+test("a regular checkout serves /admin with exactly the deployed policy", async ({
+  request,
+}) => {
+  const deployed = effectiveHeaders(
+    parseHeadersFile(readFileSync("public/_headers", "utf8")),
+    "/admin/",
+  )["content-security-policy"];
+  // The production preview and the dev server of this repository, which is
+  // not a disposable demo copy.
+  for (const origin of ["http://localhost:4173", "http://localhost:4175"]) {
+    const response = await request.get(`${origin}/admin/`);
+    const policy = response.headers()["content-security-policy"];
+    expect(policy, origin).toBe(deployed);
+    expect(policy, origin).not.toContain("unsafe-eval");
+    expect(policy, origin).not.toContain("localhost:8081");
   }
 });
