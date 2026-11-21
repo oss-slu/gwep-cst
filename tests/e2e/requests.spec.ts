@@ -30,6 +30,9 @@ const SOURCES = {
   day: "src/slides/calendar-day/Component.tsx",
   month: "src/slides/calendar-month/Component.tsx",
   year: "src/slides/calendar-year/Component.tsx",
+  weather: "src/slides/weather/Component.tsx",
+  sounds: "src/slides/sounds/Component.tsx",
+  reveal: "src/slides/reveal/Component.tsx",
 } as const;
 
 /** The files a module needs: its own, its static imports' and their CSS. */
@@ -91,34 +94,56 @@ test("each step downloads only what it needs", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Orientation" })).toBeVisible();
   expect(assets.take()).toEqual(entry);
 
-  // 2. Opening Orientation: the player, Orientation's data and the title
-  //    slide component (the first slide is a title).
+  // 2. Opening Orientation: the player, Orientation's data, the title slide
+  //    component (the first slide is a title), and the preloaded code of
+  //    the next slide (calendar day). Nothing further ahead.
   await page.getByRole("link", { name: "Orientation" }).click();
   await expect(page.locator(".slide h2")).toHaveText("Welcome to Orientation");
+  await page.waitForLoadState("networkidle");
   const opened = assets.take();
   const expected = new Set(
     [
-      ...filesFor(manifest, SOURCES.player, SOURCES.orientation, SOURCES.title),
+      ...filesFor(
+        manifest,
+        SOURCES.player,
+        SOURCES.orientation,
+        SOURCES.title,
+        SOURCES.day,
+      ),
     ].filter((name) => !entry.has(name)),
   );
   expect(opened).toEqual(expected);
-  for (const other of ["childhood", "day", "month", "year"] as const) {
+  for (const other of [
+    "childhood",
+    "month",
+    "year",
+    "weather",
+    "sounds",
+    "reveal",
+  ] as const) {
     expect(opened.has(file(manifest, other)), other).toBe(false);
   }
+  // Preloading never mounts the next slide.
+  await expect(page.locator(".slide")).toHaveCount(1);
 
-  // 3. The next slide: only the calendar-day component and its shared code.
+  // 3. The next slide was already downloaded; now only the slide after it
+  //    (calendar month) is preloaded.
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.locator(".player__position")).toHaveText("Slide 2 of 5");
+  await expect(page.locator(".player__position")).toHaveText("Slide 2 of 11");
+  await page.waitForLoadState("networkidle");
   const loaded = new Set([...entry, ...opened]);
   expect(assets.take()).toEqual(
     new Set(
-      [...filesFor(manifest, SOURCES.day)].filter((name) => !loaded.has(name)),
+      [...filesFor(manifest, SOURCES.month)].filter(
+        (name) => !loaded.has(name),
+      ),
     ),
   );
 
   // 4. Back to the welcome slide: everything is already downloaded.
   await page.getByRole("button", { name: "Previous" }).click();
-  await expect(page.locator(".player__position")).toHaveText("Slide 1 of 5");
+  await expect(page.locator(".player__position")).toHaveText("Slide 1 of 11");
+  await page.waitForLoadState("networkidle");
   expect(assets.take()).toEqual(new Set());
 });
 
@@ -128,10 +153,20 @@ test("a deep link loads the current slide's component, not the first slide's", a
   const manifest = readManifest();
   const assets = recordAssets(page);
   await page.goto("/sessions/orientation/year");
-  await expect(page.locator(".player__position")).toHaveText("Slide 4 of 5");
+  await expect(page.locator(".player__position")).toHaveText("Slide 4 of 11");
+  await page.waitForLoadState("networkidle");
   const requested = assets.take();
   expect(requested.has(file(manifest, "year"))).toBe(true);
-  for (const other of ["title", "day", "month", "childhood"] as const) {
+  // The next slide (weather) is preloaded; nothing else.
+  expect(requested.has(file(manifest, "weather"))).toBe(true);
+  for (const other of [
+    "title",
+    "day",
+    "month",
+    "childhood",
+    "sounds",
+    "reveal",
+  ] as const) {
     expect(requested.has(file(manifest, other)), other).toBe(false);
   }
 });
@@ -146,4 +181,30 @@ test("an unavailable session's address downloads nothing beyond the list", async
     page.getByRole("heading", { level: 1, name: "Coming soon" }),
   ).toBeVisible();
   expect(assets.take()).toEqual(filesFor(manifest, SOURCES.entry));
+});
+
+test("a failed preload of the next slide's code does not stop that slide loading", async ({
+  page,
+}) => {
+  const manifest = readManifest();
+  const reveal = file(manifest, "reveal");
+  let failures = 0;
+  // Fail only the first request for the Reveal code: the speculative one.
+  await page.route(`**/${reveal}`, async (route) => {
+    if (failures === 0) {
+      failures += 1;
+      await route.abort("internetdisconnected");
+    } else {
+      await route.fallback();
+    }
+  });
+  await page.goto("/sessions/orientation/sounds");
+  await expect(page.locator(".player__position")).toHaveText("Slide 6 of 11");
+  await expect.poll(() => failures).toBe(1);
+
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.locator(".player__position")).toHaveText("Slide 7 of 11");
+  await expect(
+    page.getByRole("button", { name: "Reveal answer" }),
+  ).toBeVisible();
 });

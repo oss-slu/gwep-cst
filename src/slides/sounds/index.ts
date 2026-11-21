@@ -1,3 +1,4 @@
+import { slideComponents } from "../components.ts";
 import { defineSlide } from "../types.ts";
 import { soundsCmsFields } from "./cms.ts";
 import { soundsFields } from "./schema.ts";
@@ -7,5 +8,5 @@ export const soundsSlide = defineSlide({
   label: "Sounds: play clips and guess",
   fields: soundsFields,
   cmsFields: soundsCmsFields,
-  loadComponent: () => import("./Component.tsx"),
+  loadComponent: slideComponents["sounds"],
 });

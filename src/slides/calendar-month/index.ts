@@ -1,4 +1,5 @@
 import { calendarCmsFields, calendarFields } from "../calendar/fields.ts";
+import { slideComponents } from "../components.ts";
 import { defineSlide } from "../types.ts";
 
 export const calendarMonthSlide = defineSlide({
@@ -6,5 +7,5 @@ export const calendarMonthSlide = defineSlide({
   label: "Calendar: month",
   fields: calendarFields,
   cmsFields: calendarCmsFields("month"),
-  loadComponent: () => import("./Component.tsx"),
+  loadComponent: slideComponents["calendar-month"],
 });

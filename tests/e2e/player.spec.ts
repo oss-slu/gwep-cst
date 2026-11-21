@@ -6,6 +6,7 @@ import orientation from "../../content/sessions/orientation.json" with { type: "
 // Runs against the production build with the real Orientation fixture.
 const { ui } = site;
 const ids = orientation.slides.map((slide) => slide.id);
+const types = orientation.slides.map((slide) => slide.type);
 const total = ids.length;
 const path = (id: string) => `/sessions/orientation/${id}`;
 const position = (n: number) =>
@@ -422,11 +423,28 @@ function layout(page: Page) {
         size: parseFloat(getComputedStyle(element).fontSize),
       }));
     const slide = document.querySelector(".player__slide");
+    // Height left in the slide area after the slide's content. Text metrics
+    // differ between systems (CI runs on Linux), so slides must fit with
+    // room to spare, not exactly.
+    const content = document.querySelector(".player__slide .slide");
+    const style = content === null ? null : getComputedStyle(content);
+    const children = content === null ? [] : [...content.children];
+    const used =
+      style === null
+        ? 0
+        : children.reduce(
+            (sum, child) => sum + child.getBoundingClientRect().height,
+            0,
+          ) +
+          parseFloat(style.paddingTop) +
+          parseFloat(style.paddingBottom) +
+          parseFloat(style.rowGap) * Math.max(0, children.length - 1);
     return {
       horizontalScroll: root.scrollWidth > root.clientWidth,
       pageScrolls: root.scrollHeight > window.innerHeight,
       slideScrolls:
         slide !== null && slide.scrollHeight > slide.clientHeight + 1,
+      spareHeight: (content?.clientHeight ?? 0) - used,
       targets,
       texts,
     };
@@ -460,9 +478,22 @@ for (const viewport of viewports) {
         await page.goto(path(ids[n - 1] ?? ""));
         await expectSlide(page, n);
         const facts = await layout(page);
-        expect(facts.horizontalScroll, `slide ${String(n)}`).toBe(false);
-        expect(facts.pageScrolls, `slide ${String(n)}`).toBe(false);
-        expect(facts.slideScrolls, `slide ${String(n)}`).toBe(false);
+        const name = `slide ${String(n)} (${ids[n - 1] ?? ""})`;
+        expect(facts.horizontalScroll, name).toBe(false);
+        expect(facts.pageScrolls, name).toBe(false);
+        if (viewport.name === "phone" && types[n - 1] === "sounds") {
+          // Up to six clips cannot always fit a phone (see sounds.spec.ts),
+          // so the slide area may scroll; each clip's button must come into
+          // view when Tab reaches it.
+          const buttons = slideArea(page, n).getByRole("button");
+          for (let clip = 0; clip < (await buttons.count()); clip += 1) {
+            await buttons.nth(clip).focus();
+            await expect(buttons.nth(clip)).toBeInViewport({ ratio: 1 });
+          }
+        } else {
+          expect(facts.slideScrolls, name).toBe(false);
+          expect(facts.spareHeight, name).toBeGreaterThanOrEqual(16);
+        }
         for (const target of facts.targets) {
           expect(target.width, target.name).toBeGreaterThanOrEqual(44);
           expect(target.height, target.name).toBeGreaterThanOrEqual(44);

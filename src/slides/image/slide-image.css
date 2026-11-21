@@ -22,7 +22,9 @@
      phones so the question, the button and a revealed answer still fit. */
   --image-max-height: max(8rem, min(38vh, 100vh - 30rem));
   --fallback-width: 18rem;
-  --fallback-height: 12rem;
+  /* Room for the "didn't load" message and its button: a little less on
+     short screens such as phones, so a revealed answer still fits below. */
+  --fallback-height: clamp(10rem, 25vh, 12rem);
   --picture-width: min(
     100cqi,
     var(--image-width),
@@ -35,6 +37,14 @@
     var(--fallback-height),
     calc(var(--picture-width) / var(--image-shape))
   );
+}
+
+/* On narrow screens such as phones, questions and answers wrap onto more
+   lines, so the picture gives up a little more height. */
+@media (max-width: 40rem) {
+  .slide-image {
+    --image-max-height: max(8rem, min(38vh, 100vh - 32rem));
+  }
 }
 
 .slide-image__picture {

@@ -9,12 +9,15 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import {
   checkAudioStreams,
+  checkDeclaredImage,
   checkLoudness,
   checkPixels,
   checkSize,
   classifyPath,
   imageDimensions,
   imageFormatOf,
+  type DeclaredImage,
+  type Dimensions,
   type MediaType,
 } from "./media/rules.ts";
 import {
@@ -80,6 +83,48 @@ function mediaReferences(
   });
 }
 
+/** Every image object (src, width, height, optional variants) in a session file. */
+function imageReferences(
+  value: unknown,
+  path = "",
+): { path: string; image: DeclaredImage }[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((item, index) =>
+      imageReferences(item, `${path}[${String(index)}]`),
+    );
+  }
+  if (typeof value !== "object" || value === null) return [];
+  const record = value as Record<string, unknown>;
+  const { src, width, height, variants } = record;
+  if (
+    typeof src === "string" &&
+    typeof width === "number" &&
+    typeof height === "number"
+  ) {
+    const list = Array.isArray(variants) ? (variants as unknown[]) : [];
+    return [
+      {
+        path,
+        image: {
+          src,
+          width,
+          height,
+          variants: list.flatMap((variant) => {
+            const entry = variant as Record<string, unknown>;
+            return typeof entry.src === "string" &&
+              typeof entry.width === "number"
+              ? [{ src: entry.src, width: entry.width }]
+              : [];
+          }),
+        },
+      },
+    ];
+  }
+  return Object.entries(record).flatMap(([key, item]) =>
+    imageReferences(item, path === "" ? key : `${path}.${key}`),
+  );
+}
+
 const entries = await mediaEntries();
 const checks: ({ readonly file: string } & MediaType)[] = [];
 for (const { entry, relative } of entries) {
@@ -103,6 +148,8 @@ for (const { entry, relative } of entries) {
 
 // The tools are needed only when there is media to inspect.
 const passed = new Set<string>();
+// The header size of each picture that passed, for the content size check.
+const passedSizes = new Map<string, Dimensions>();
 if (checks.length > 0) {
   try {
     for (const version of await checkTools())
@@ -137,7 +184,9 @@ for (const check of checks) {
         );
         continue;
       }
-      const pixelProblem = checkPixels(imageDimensions(bytes, check.format));
+      const dimensions = imageDimensions(bytes, check.format);
+      const pixelProblem = checkPixels(dimensions);
+      if (dimensions !== undefined) passedSizes.set(file, dimensions);
       if (pixelProblem !== undefined) {
         // Never handed to the decoder.
         report(file, pixelProblem);
@@ -163,6 +212,7 @@ for (const check of checks) {
     report(file, describe(error));
   }
   if (problems.length === before) passed.add(file);
+  else passedSizes.delete(file);
 }
 
 // References must point at files that passed, so a rejected file, a symbolic
@@ -191,6 +241,12 @@ for (const name of sessionFiles) {
         sessionFile,
         `${path}: ${src} is not a valid media file (${file} is missing or failed its checks)`,
       );
+    }
+  }
+  for (const { path, image } of imageReferences(data)) {
+    const sizeOf = (src: string) => passedSizes.get(`public${src}`);
+    for (const message of checkDeclaredImage(path, image, sizeOf)) {
+      report(sessionFile, message);
     }
   }
 }

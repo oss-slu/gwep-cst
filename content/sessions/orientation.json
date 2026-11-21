@@ -7,32 +7,173 @@
       "type": "title",
       "id": "welcome",
       "heading": "Welcome to Orientation",
-      "subheading": "Placeholder session. The full Orientation session will replace it.",
-      "notes": "Placeholder for M0-06 (player and deep links). M0-09 replaces this file with the full Orientation demo session."
+      "subheading": "This demo uses placeholder pictures, sounds and answers.",
+      "notes": "Placeholder demo wording until GWEP supplies the text."
     },
     {
       "type": "calendar-day",
       "id": "day",
       "heading": "What day is it today?",
-      "notes": "Placeholder, replaced in M0-09."
+      "notes": "Placeholder demo wording until GWEP supplies the text."
     },
     {
       "type": "calendar-month",
       "id": "month",
       "heading": "What month is it?",
-      "notes": "Placeholder, replaced in M0-09."
+      "notes": "Placeholder demo wording until GWEP supplies the text."
     },
     {
       "type": "calendar-year",
       "id": "year",
       "heading": "What year is it?",
-      "notes": "Placeholder, replaced in M0-09."
+      "notes": "Placeholder demo wording until GWEP supplies the text."
+    },
+    {
+      "type": "weather",
+      "id": "weather",
+      "heading": "What is the weather like today?",
+      "levels": [
+        {
+          "label": "Cold"
+        },
+        {
+          "label": "Cool"
+        },
+        {
+          "label": "Mild"
+        },
+        {
+          "label": "Warm"
+        },
+        {
+          "label": "Hot"
+        }
+      ],
+      "notes": "Placeholder demo wording until GWEP supplies the text."
+    },
+    {
+      "type": "sounds",
+      "id": "sounds",
+      "heading": "What can you hear?",
+      "clips": [
+        {
+          "sound": {
+            "src": "/media/orientation/placeholder-chime.mp3",
+            "description": "Placeholder sound: a bell-like chime"
+          }
+        },
+        {
+          "sound": {
+            "src": "/media/orientation/placeholder-knock.mp3",
+            "description": "Placeholder sound: soft knocking"
+          }
+        },
+        {
+          "sound": {
+            "src": "/media/orientation/placeholder-whistle.mp3",
+            "description": "Placeholder sound: a rising whistle"
+          }
+        }
+      ],
+      "notes": "Placeholder sounds generated for the demo; GWEP will supply the real clips."
+    },
+    {
+      "type": "reveal",
+      "id": "landmark-state",
+      "prompt": "What state is the famous landmark located?",
+      "image": {
+        "src": "/media/orientation/placeholder-1.png",
+        "alt": "Placeholder picture 1 for the famous landmark question about its state. GWEP will supply the real photograph.",
+        "width": 1200,
+        "height": 900,
+        "variants": [
+          {
+            "src": "/media/orientation/placeholder-1-800.png",
+            "width": 800
+          },
+          {
+            "src": "/media/orientation/placeholder-1-400.png",
+            "width": 400
+          }
+        ]
+      },
+      "answer": "Placeholder answer: GWEP will supply the real answer.",
+      "notes": "GWEP prompt 1 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones."
+    },
+    {
+      "type": "reveal",
+      "id": "landmark-country",
+      "prompt": "The famous landmark is located in what country?",
+      "image": {
+        "src": "/media/orientation/placeholder-2.png",
+        "alt": "Placeholder picture 2 for the famous landmark question about its country. GWEP will supply the real photograph.",
+        "width": 1200,
+        "height": 900,
+        "variants": [
+          {
+            "src": "/media/orientation/placeholder-2-800.png",
+            "width": 800
+          },
+          {
+            "src": "/media/orientation/placeholder-2-400.png",
+            "width": 400
+          }
+        ]
+      },
+      "answer": "Placeholder answer: GWEP will supply the real answer.",
+      "notes": "GWEP prompt 2 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones."
+    },
+    {
+      "type": "reveal",
+      "id": "food-countries",
+      "prompt": "What countries are known for this food?",
+      "image": {
+        "src": "/media/orientation/placeholder-3.png",
+        "alt": "Placeholder picture 3 for the food question. GWEP will supply the real photograph.",
+        "width": 1200,
+        "height": 900,
+        "variants": [
+          {
+            "src": "/media/orientation/placeholder-3-800.png",
+            "width": 800
+          },
+          {
+            "src": "/media/orientation/placeholder-3-400.png",
+            "width": 400
+          }
+        ]
+      },
+      "answer": "Placeholder answer: GWEP will supply the real answer.",
+      "notes": "GWEP prompt 3 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones."
+    },
+    {
+      "type": "reveal",
+      "id": "clothing-countries",
+      "prompt": "What country is known for this type of clothing?",
+      "image": {
+        "src": "/media/orientation/placeholder-4.png",
+        "alt": "Placeholder picture 4 for the clothing question. GWEP will supply the real photograph.",
+        "width": 1200,
+        "height": 900,
+        "variants": [
+          {
+            "src": "/media/orientation/placeholder-4-800.png",
+            "width": 800
+          },
+          {
+            "src": "/media/orientation/placeholder-4-400.png",
+            "width": 400
+          }
+        ]
+      },
+      "answer": "Placeholder answer: GWEP will supply the real answer.",
+      "notes": "GWEP prompt 4 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones."
     },
     {
       "type": "title",
       "id": "closing",
       "heading": "Thank you",
-      "notes": "Placeholder, replaced in M0-09."
+      "notes": "Placeholder demo wording until GWEP supplies the text."
     }
   ]
 }

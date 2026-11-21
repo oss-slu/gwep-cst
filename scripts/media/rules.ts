@@ -356,3 +356,52 @@ export function checkPixels(
     ? `image is ${String(dimensions.width)} x ${String(dimensions.height)} = ${String(pixels)} pixels, over the ${String(IMAGE_MAX_PIXELS)}-pixel limit`
     : undefined;
 }
+
+/** An image as a session file declares it. */
+export interface DeclaredImage {
+  readonly src: string;
+  readonly width: number;
+  readonly height: number;
+  readonly variants: readonly {
+    readonly src: string;
+    readonly width: number;
+  }[];
+}
+
+/**
+ * The declared size must be the file's real size, so the page reserves the
+ * right space. Each variant must have its declared width and the main
+ * picture's shape (its height within 1 pixel of the scaled height).
+ * `actual` gives the header size of a file that passed its checks.
+ */
+export function checkDeclaredImage(
+  path: string,
+  image: DeclaredImage,
+  actual: (src: string) => Dimensions | undefined,
+): string[] {
+  const problems: string[] = [];
+  const main = actual(image.src);
+  if (main === undefined) return problems; // reported as an invalid reference
+  if (main.width !== image.width || main.height !== image.height) {
+    problems.push(
+      `${path}: ${image.src} is ${String(main.width)} x ${String(main.height)}, but the content says ${String(image.width)} x ${String(image.height)}`,
+    );
+  }
+  image.variants.forEach((variant, index) => {
+    const size = actual(variant.src);
+    if (size === undefined) return;
+    const where = `${path}.variants[${String(index)}]`;
+    if (size.width !== variant.width) {
+      problems.push(
+        `${where}: ${variant.src} is ${String(size.width)} px wide, but the content says ${String(variant.width)}`,
+      );
+    }
+    const expectedHeight = (size.width * main.height) / main.width;
+    if (Math.abs(size.height - expectedHeight) > 1) {
+      problems.push(
+        `${where}: ${variant.src} is ${String(size.width)} x ${String(size.height)}, not the shape of ${image.src} (${String(main.width)} x ${String(main.height)}); expected about ${String(size.width)} x ${String(Math.round(expectedHeight))}`,
+      );
+    }
+  });
+  return problems;
+}

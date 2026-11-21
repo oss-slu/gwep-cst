@@ -6,6 +6,7 @@ import {
   IMAGE_MAX_PIXELS,
   IMAGE_TARGET_BYTES,
   checkAudioStreams,
+  checkDeclaredImage,
   checkLoudness,
   checkPixels,
   checkSize,
@@ -338,5 +339,71 @@ describe("picture size in pixels, read from the header before decoding", () => {
     expect(checkPixels({ width: 0, height: 10 })).toBe(
       "image size could not be read from its header",
     );
+  });
+});
+
+describe("declared image sizes must match the files", () => {
+  const sizes: Record<string, { width: number; height: number }> = {
+    "/media/o/a.png": { width: 1200, height: 900 },
+    "/media/o/a-800.png": { width: 800, height: 600 },
+    "/media/o/a-401.png": { width: 401, height: 301 }, // rounding: 300.75
+    "/media/o/squashed.png": { width: 800, height: 500 },
+  };
+  const actual = (src: string) => sizes[src];
+  const image = {
+    src: "/media/o/a.png",
+    width: 1200,
+    height: 900,
+    variants: [],
+  };
+
+  it("accepts matching sizes and variants within 1 px of the shape", () => {
+    expect(
+      checkDeclaredImage(
+        "slides[6].image",
+        {
+          ...image,
+          variants: [
+            { src: "/media/o/a-800.png", width: 800 },
+            { src: "/media/o/a-401.png", width: 401 },
+          ],
+        },
+        actual,
+      ),
+    ).toEqual([]);
+  });
+
+  it("names the asset and the mismatch", () => {
+    expect(
+      checkDeclaredImage("slides[6].image", { ...image, height: 800 }, actual),
+    ).toEqual([
+      "slides[6].image: /media/o/a.png is 1200 x 900, but the content says 1200 x 800",
+    ]);
+    expect(
+      checkDeclaredImage(
+        "slides[6].image",
+        {
+          ...image,
+          variants: [
+            { src: "/media/o/a-800.png", width: 640 },
+            { src: "/media/o/squashed.png", width: 800 },
+          ],
+        },
+        actual,
+      ),
+    ).toEqual([
+      "slides[6].image.variants[0]: /media/o/a-800.png is 800 px wide, but the content says 640",
+      "slides[6].image.variants[1]: /media/o/squashed.png is 800 x 500, not the shape of /media/o/a.png (1200 x 900); expected about 800 x 600",
+    ]);
+  });
+
+  it("leaves missing or rejected files to the reference check", () => {
+    expect(
+      checkDeclaredImage(
+        "slides[0].image",
+        { ...image, src: "/media/o/missing.png" },
+        actual,
+      ),
+    ).toEqual([]);
   });
 });

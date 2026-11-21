@@ -1,3 +1,4 @@
+import { slideComponents } from "../components.ts";
 import { defineSlide } from "../types.ts";
 import { weatherCmsFields } from "./cms.ts";
 import { weatherFields } from "./schema.ts";
@@ -7,5 +8,5 @@ export const weatherSlide = defineSlide({
   label: "Weather: thermometer",
   fields: weatherFields,
   cmsFields: weatherCmsFields,
-  loadComponent: () => import("./Component.tsx"),
+  loadComponent: slideComponents["weather"],
 });

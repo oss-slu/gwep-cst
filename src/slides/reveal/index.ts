@@ -1,3 +1,4 @@
+import { slideComponents } from "../components.ts";
 import { defineSlide } from "../types.ts";
 import { revealCmsFields } from "./cms.ts";
 import { revealFields } from "./schema.ts";
@@ -7,5 +8,5 @@ export const revealSlide = defineSlide({
   label: "Reveal: picture with a hidden answer",
   fields: revealFields,
   cmsFields: revealCmsFields,
-  loadComponent: () => import("./Component.tsx"),
+  loadComponent: slideComponents["reveal"],
 });

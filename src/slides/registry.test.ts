@@ -8,6 +8,7 @@ import {
   testTextSlide,
 } from "../../tests/support/test-slides";
 import { sessionSchema } from "../content/session-schema.ts";
+import { slideComponents } from "./components.ts";
 import { createSlideRegistry, slideRegistry } from "./registry.ts";
 import type { AnySlideModule } from "./types.ts";
 
@@ -176,5 +177,17 @@ describe("the production registry", () => {
         ),
       ),
     ).toEqual(["slides.0.heading: Heading must not be empty"]);
+  });
+});
+
+describe("component loaders", () => {
+  it("every registered slide type loads its code through the one shared list", () => {
+    const loaders: Readonly<Record<string, unknown>> = slideComponents;
+    expect(Object.keys(loaders).sort()).toEqual(
+      slideRegistry.modules.map((module) => module.type).sort(),
+    );
+    for (const module of slideRegistry.modules) {
+      expect(module.loadComponent, module.type).toBe(loaders[module.type]);
+    }
   });
 });
