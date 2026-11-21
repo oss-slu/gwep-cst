@@ -54,6 +54,10 @@ function requestFixtureSessions(): Plugin {
 }
 
 export default defineConfig(({ mode }) => ({
+  // Pre-bundle the router when the dev server starts. Otherwise Vite finds
+  // it on the first page load and re-optimizes mid-run, which briefly loads
+  // two copies of React (seen on the test-only player page).
+  optimizeDeps: { include: ["wouter", "wouter/memory-location"] },
   plugins: [
     react(),
     siteTitle(),

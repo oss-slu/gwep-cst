@@ -3,14 +3,15 @@
   "number": 9,
   "title": "Fixture: Orientation",
   "slides": [
-    { "type": "title", "id": "welcome", "heading": "Fixture heading" },
     {
-      "type": "reveal",
-      "id": "landmark-1",
-      "image": {
-        "src": "/media/orientation/landmark-1.jpg",
-        "alt": "Fixture image description"
-      }
+      "type": "title",
+      "id": "welcome",
+      "heading": "Fixture heading"
+    },
+    {
+      "type": "quiz",
+      "id": "quiz-1",
+      "question": "Fixture question"
     }
   ]
 }

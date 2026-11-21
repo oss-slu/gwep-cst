@@ -102,7 +102,12 @@ describe("StaticContentSource", () => {
       {
         type: "test-media",
         id: "photo",
-        image: { src: "https://cdn.example.com/a.jpg", alt: "" },
+        image: {
+          src: "https://cdn.example.com/a.jpg",
+          alt: "",
+          width: 4,
+          height: 3,
+        },
         sound: { src: "/media/orientation/a.mp3", description: "Birds" },
       },
       "slides[0].image.src: Image path must look like /media/<folder>/<file>",

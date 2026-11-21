@@ -59,6 +59,38 @@ export function imageFields(
         required: false,
         hint: "Tick only if the picture adds nothing to the meaning of the slide.",
       },
+      {
+        name: "width",
+        label: "Picture width in pixels",
+        widget: "number",
+        value_type: "int",
+        min: 1,
+        hint: "The width of the picture file, so the page can save its space while it loads.",
+      },
+      {
+        name: "height",
+        label: "Picture height in pixels",
+        widget: "number",
+        value_type: "int",
+        min: 1,
+      },
+      {
+        name: "variants",
+        label: "Smaller copies (optional)",
+        widget: "list",
+        required: false,
+        hint: "The same picture saved at other widths, with the same shape. Phones then download a smaller file.",
+        fields: [
+          { name: "src", label: "Picture", widget: "image" },
+          {
+            name: "width",
+            label: "Width in pixels",
+            widget: "number",
+            value_type: "int",
+            min: 1,
+          },
+        ],
+      },
     ],
   };
 }

@@ -32,14 +32,43 @@ function mediaPath(kind: string, extensions: readonly string[]) {
     );
 }
 
-/** An image with its accessibility text (AGENTS.md rule 10). */
+const imagePath = mediaPath("Image", ["jpg", "jpeg", "png", "webp", "avif"]);
+
+function pixels(what: string) {
+  return z
+    .int(`${what} must be a whole number of pixels`)
+    .positive(`${what} must be more than 0`);
+}
+
+/**
+ * An image with its accessibility text (AGENTS.md rule 10) and its size in
+ * pixels, so the page can reserve its space before it loads. Optional
+ * variants are the same picture at other widths, with the same shape, so
+ * browsers can pick a smaller file for a smaller screen.
+ */
 export const imageSchema = z
   .strictObject({
-    src: mediaPath("Image", ["jpg", "jpeg", "png", "webp", "avif"]),
+    src: imagePath,
     alt: z.string(),
     decorative: z.boolean().optional(),
+    width: pixels("Image width"),
+    height: pixels("Image height"),
+    variants: z
+      .array(z.strictObject({ src: imagePath, width: pixels("Variant width") }))
+      .optional(),
   })
   .superRefine((image, ctx) => {
+    const widths = new Set<number>([image.width]);
+    image.variants?.forEach((variant, index) => {
+      if (widths.has(variant.width)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["variants", index, "width"],
+          message: `Width ${String(variant.width)} is already used by this image or another variant`,
+        });
+      }
+      widths.add(variant.width);
+    });
     const decorative = image.decorative === true;
     if (decorative && image.alt !== "") {
       ctx.addIssue({

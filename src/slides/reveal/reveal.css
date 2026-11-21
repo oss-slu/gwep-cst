@@ -1,0 +1,24 @@
+/*
+ * Top-aligned with the answer last, so revealing or hiding the answer never
+ * moves the question, the picture or the button.
+ */
+.slide.reveal {
+  justify-content: flex-start;
+  gap: 1rem;
+}
+
+.reveal__toggle {
+  display: inline-grid;
+}
+
+.reveal__toggle > span {
+  grid-area: 1 / 1;
+}
+
+.reveal__label--hidden {
+  visibility: hidden;
+}
+
+.reveal__answer {
+  max-width: 100%;
+}

@@ -23,7 +23,9 @@ describe("keyBelongsToTarget", () => {
       "#t",
     ],
   ])("leaves keys to %s", (_name, html, selector) => {
-    expect(keyBelongsToTarget(element(html, selector))).toBe(true);
+    expect(keyBelongsToTarget(element(html, selector), "ArrowRight")).toBe(
+      true,
+    );
   });
 
   it.each([
@@ -35,10 +37,41 @@ describe("keyBelongsToTarget", () => {
       "#t",
     ],
   ])("handles keys on %s", (_name, html, selector) => {
-    expect(keyBelongsToTarget(element(html, selector))).toBe(false);
+    expect(keyBelongsToTarget(element(html, selector), "ArrowRight")).toBe(
+      false,
+    );
   });
 
   it("handles keys with no target", () => {
-    expect(keyBelongsToTarget(null)).toBe(false);
+    expect(keyBelongsToTarget(null, "ArrowRight")).toBe(false);
+  });
+
+  it.each([
+    ["a range input", '<input type="range" id=t>'],
+    ["an ARIA slider", '<div role="slider" id=t></div>'],
+  ])(
+    "leaves arrows, Home and End to %s but not Page Up or Page Down",
+    (_name, html) => {
+      const slider = element(html, "#t");
+      for (const key of [
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Home",
+        "End",
+      ]) {
+        expect(keyBelongsToTarget(slider, key), key).toBe(true);
+      }
+      for (const key of ["PageUp", "PageDown"]) {
+        expect(keyBelongsToTarget(slider, key), key).toBe(false);
+      }
+    },
+  );
+
+  it("leaves Page Up and Page Down to a text field", () => {
+    expect(keyBelongsToTarget(element("<input id=t>", "#t"), "PageDown")).toBe(
+      true,
+    );
   });
 });

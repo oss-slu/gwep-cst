@@ -55,12 +55,26 @@ describe("createSlideRegistry", () => {
   it.each([
     [
       "an external image",
-      { image: { src: "https://cdn.example.com/a.jpg", alt: "Photo" } },
+      {
+        image: {
+          src: "https://cdn.example.com/a.jpg",
+          alt: "Photo",
+          width: 4,
+          height: 3,
+        },
+      },
       "slides.0.image.src",
     ],
     [
       "missing alt text",
-      { image: { src: "/media/orientation/a.jpg", alt: "" } },
+      {
+        image: {
+          src: "/media/orientation/a.jpg",
+          alt: "",
+          width: 4,
+          height: 3,
+        },
+      },
       "slides.0.image.alt",
     ],
     [
@@ -113,7 +127,12 @@ describe("createSlideRegistry", () => {
     const Component = await testRegistry.loadComponent({
       type: "test-media",
       id: "photo",
-      image: { src: "/media/orientation/a.jpg", alt: "A photo" },
+      image: {
+        src: "/media/orientation/a.jpg",
+        alt: "A photo",
+        width: 4,
+        height: 3,
+      },
       sound: { src: "/media/orientation/a.mp3", description: "Birds" },
     });
     expect((await testMediaSlide.loadComponent()).default).toBe(Component);
@@ -121,12 +140,14 @@ describe("createSlideRegistry", () => {
 });
 
 describe("the production registry", () => {
-  it("registers the title and calendar slide types", () => {
+  it("registers the production slide types", () => {
     expect(slideRegistry.modules.map((module) => module.type)).toEqual([
       "title",
       "calendar-day",
       "calendar-month",
       "calendar-year",
+      "weather",
+      "reveal",
     ]);
   });
 
@@ -139,8 +160,8 @@ describe("the production registry", () => {
         { type: "calendar-day", id: "day" },
       ]).success,
     ).toBe(true);
-    expect(problems(session([{ type: "reveal", id: "landmark-1" }]))).toEqual([
-      'slides.0.type: Unknown slide type "reveal". Registered types: title, calendar-day, calendar-month, calendar-year',
+    expect(problems(session([{ type: "sounds", id: "sounds" }]))).toEqual([
+      'slides.0.type: Unknown slide type "sounds". Registered types: title, calendar-day, calendar-month, calendar-year, weather, reveal',
     ]);
   });
 

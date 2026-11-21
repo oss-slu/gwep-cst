@@ -27,16 +27,28 @@ const USES_ARROW_KEYS = [
   ].map((role) => `[role="${role}"]`),
 ].join(", ");
 
+// Sliders, such as the Weather thermometer, keep the arrow keys for their
+// marker but let Page Up and Page Down through, so a presentation clicker
+// still changes slides while the thermometer has focus.
+const SLIDERS = 'input[type="range"], [role="slider"]';
+const PAGE_KEYS = new Set(["PageUp", "PageDown"]);
+
 /** True when a key press belongs to the focused element, not to the player. */
-export function keyBelongsToTarget(target: EventTarget | null): boolean {
-  return target instanceof Element && target.closest(USES_ARROW_KEYS) !== null;
+export function keyBelongsToTarget(
+  target: EventTarget | null,
+  key: string,
+): boolean {
+  if (!(target instanceof Element)) return false;
+  if (PAGE_KEYS.has(key) && target.closest(SLIDERS) !== null) return false;
+  return target.closest(USES_ARROW_KEYS) !== null;
 }
 
 /**
  * Left arrow and Page Up go back a slide, Right arrow and Page Down go
  * forward (presentation clickers send Page Up and Page Down). Presses with a
  * modifier key, held-down repeats and presses inside elements that use these
- * keys are left alone.
+ * keys are left alone. A key the player uses has its default action
+ * cancelled, so a focused slider does not also move on Page Up or Page Down.
  */
 export function useSlideKeys(onPrevious: () => void, onNext: () => void) {
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -48,7 +60,7 @@ export function useSlideKeys(onPrevious: () => void, onNext: () => void) {
       event.ctrlKey ||
       event.metaKey ||
       event.shiftKey ||
-      keyBelongsToTarget(event.target)
+      keyBelongsToTarget(event.target, event.key)
     ) {
       return;
     }

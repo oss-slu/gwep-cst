@@ -2,5 +2,10 @@
   "slug": "childhood",
   "number": 1,
   "title": "Fixture: Childhood",
-  "slides": [{ "type": "weather", "id": "weather" }]
+  "slides": [
+    {
+      "type": "sounds",
+      "id": "sounds"
+    }
+  ]
 }
