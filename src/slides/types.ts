@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { z } from "zod";
+import { z } from "zod/mini";
 import { baseSlideShape } from "../content/schema.ts";
 import type { CmsField } from "./cms-field.ts";
 
@@ -25,15 +25,16 @@ type ReservedField = (typeof RESERVED_FIELDS)[number];
 
 type SlideShape<
   T extends string,
-  F extends z.ZodRawShape,
+  F extends z.core.$ZodLooseShape,
 > = typeof baseSlideShape & {
-  type: z.ZodLiteral<T>;
+  type: z.ZodMiniLiteral<T>;
 } & F;
 
 /** The validated data for a slide type, derived from its schema. */
-export type SlideData<T extends string, F extends z.ZodRawShape> = z.output<
-  z.ZodObject<SlideShape<T, F>>
->;
+export type SlideData<
+  T extends string,
+  F extends z.core.$ZodLooseShape,
+> = z.output<z.ZodMiniObject<SlideShape<T, F>>>;
 
 export interface SlideProps<S> {
   readonly slide: S;
@@ -48,7 +49,7 @@ export interface SlideModule<T extends string, S> {
   /** Name of the slide type shown to editors. */
   readonly label: string;
   /** Strict schema: unknown fields are rejected. */
-  readonly schema: z.ZodType<S>;
+  readonly schema: z.ZodMiniType<S>;
   readonly cmsFields: readonly CmsField[];
   readonly loadComponent: () => Promise<{ default: SlideComponent<S> }>;
 }
@@ -58,12 +59,18 @@ export interface AnySlideModule {
   readonly [slideModuleBrand]: true;
   readonly type: string;
   readonly label: string;
-  readonly schema: z.ZodType<{ readonly id: string; readonly type: string }>;
+  readonly schema: z.ZodMiniType<{
+    readonly id: string;
+    readonly type: string;
+  }>;
   readonly cmsFields: readonly CmsField[];
   readonly loadComponent: () => Promise<{ default: SlideComponent<never> }>;
 }
 
-export interface SlideDefinition<T extends string, F extends z.ZodRawShape> {
+export interface SlideDefinition<
+  T extends string,
+  F extends z.core.$ZodLooseShape,
+> {
   readonly type: T;
   readonly label: string;
   /** Slide-specific fields. Must not redefine id, type or notes. */
@@ -78,9 +85,10 @@ export interface SlideDefinition<T extends string, F extends z.ZodRawShape> {
  * Defines a slide type. The schema is always a strict object built from the
  * shared base fields, a literal `type`, and the slide's own fields.
  */
-export function defineSlide<const T extends string, F extends z.ZodRawShape>(
-  definition: SlideDefinition<T, F>,
-): SlideModule<T, SlideData<T, F>> {
+export function defineSlide<
+  const T extends string,
+  F extends z.core.$ZodLooseShape,
+>(definition: SlideDefinition<T, F>): SlideModule<T, SlideData<T, F>> {
   const fieldNames = Object.keys(definition.fields);
   const reserved = fieldNames.filter((name) =>
     (RESERVED_FIELDS as readonly string[]).includes(name),

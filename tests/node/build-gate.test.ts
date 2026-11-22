@@ -5,8 +5,10 @@ import {
   copyFile,
   mkdir,
   mkdtemp,
+  readFile,
   rm,
   symlink,
+  writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -83,6 +85,49 @@ describe.skipIf(!tools && !required)("the production build gate", () => {
       "public/media/test/too-big.png: image is 2000001 bytes (2.00 MB), over the 2000000 bytes (2.00 MB) limit",
     );
     // The steps after validate-media never ran.
+    expect(output).not.toContain("tsc --noEmit");
+    expect(output).not.toMatch(/vite v\d/);
+    expect(
+      await access(join(copy, "dist")).then(
+        () => true,
+        () => false,
+      ),
+    ).toBe(false);
+  }, 120_000);
+
+  it("npm run build fails on an invalid registered slide, names the file and field path, and never starts Vite", async () => {
+    copy = await disposableCopy();
+    const sessionFile = join(copy, "content/sessions/orientation.json");
+    const session = JSON.parse(await readFile(sessionFile, "utf8")) as {
+      slides: { heading?: string }[];
+    };
+    const firstSlide = session.slides[0];
+    if (firstSlide === undefined)
+      throw new Error("Expected at least one slide");
+    firstSlide.heading = "";
+    await writeFile(sessionFile, JSON.stringify(session, null, 2));
+
+    const result = await run("npm", ["run", "build"], { cwd: copy }).then(
+      (output) => ({ code: 0, ...output }),
+      (error: unknown) => {
+        const failure = error as {
+          code?: number;
+          stdout?: string;
+          stderr?: string;
+        };
+        return {
+          code: failure.code ?? 1,
+          stdout: failure.stdout ?? "",
+          stderr: failure.stderr ?? String(error),
+        };
+      },
+    );
+    const output = `${result.stdout}\n${result.stderr}`;
+
+    expect(result.code).not.toBe(0);
+    expect(output).toContain(
+      "content/sessions/orientation.json: slides[0].heading: Heading must not be empty",
+    );
     expect(output).not.toContain("tsc --noEmit");
     expect(output).not.toMatch(/vite v\d/);
     expect(

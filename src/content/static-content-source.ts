@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import type { z } from "zod/mini";
 import type { ContentSource } from "./content-source.ts";
 import { ContentValidationError, SessionNotFoundError } from "./errors.ts";
 import { sessionLoaders } from "./session-loaders.ts";
@@ -15,7 +15,7 @@ export type SessionLoaders = Readonly<Record<string, () => Promise<unknown>>>;
 
 export interface StaticContentSourceOptions<S extends SessionSummary> {
   readonly loaders: SessionLoaders;
-  readonly schema: z.ZodType<S>;
+  readonly schema: z.ZodMiniType<S>;
 }
 
 interface SessionFile {
@@ -36,7 +36,7 @@ export class StaticContentSource<
   S extends SessionSummary,
 > implements ContentSource<S> {
   readonly #files: ReadonlyMap<string, SessionFile>;
-  readonly #schema: z.ZodType<S>;
+  readonly #schema: z.ZodMiniType<S>;
 
   constructor({ loaders, schema }: StaticContentSourceOptions<S>) {
     const files = new Map<string, SessionFile>();

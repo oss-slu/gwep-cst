@@ -1,25 +1,31 @@
-import { z } from "zod";
+import { z } from "zod/mini";
 import type { SlideData } from "../types.ts";
 
 export const MIN_LEVELS = 2;
 export const MAX_LEVELS = 7;
 
 export const weatherFields = {
-  heading: z.string().trim().min(1, "Heading must not be empty"),
+  heading: z
+    .string()
+    .check(z.trim(), z.minLength(1, "Heading must not be empty")),
   /** Plain words from coldest to hottest, such as Cold, Mild, Hot. */
   levels: z
     .array(
       z.strictObject({
-        label: z.string().trim().min(1, "Level words must not be empty"),
+        label: z
+          .string()
+          .check(z.trim(), z.minLength(1, "Level words must not be empty")),
       }),
     )
-    .min(
-      MIN_LEVELS,
-      `A thermometer needs at least ${String(MIN_LEVELS)} levels`,
-    )
-    .max(
-      MAX_LEVELS,
-      `A thermometer can have at most ${String(MAX_LEVELS)} levels`,
+    .check(
+      z.minLength(
+        MIN_LEVELS,
+        `A thermometer needs at least ${String(MIN_LEVELS)} levels`,
+      ),
+      z.maxLength(
+        MAX_LEVELS,
+        `A thermometer can have at most ${String(MAX_LEVELS)} levels`,
+      ),
     ),
 };
 

@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import type { z } from "zod/mini";
 
 /** One thing wrong with a content file, pointing at the field when known. */
 export interface ContentProblem {
@@ -38,17 +38,32 @@ function formatPath(path: readonly PropertyKey[]): string {
 export function checkSessionData<S>(
   file: string,
   data: unknown,
-  schema: z.ZodType<S>,
+  schema: z.ZodMiniType<S>,
 ): CheckResult<S> {
   const result = schema.safeParse(data);
   if (result.success) return { ok: true, session: result.data };
   return {
     ok: false,
-    problems: result.error.issues.map((issue) => ({
-      file,
-      path: formatPath(issue.path),
-      message: issue.message,
-    })),
+    problems: result.error.issues.map((issue) => {
+      let message = issue.message;
+      if (
+        issue.code === "unrecognized_keys" &&
+        "keys" in issue &&
+        Array.isArray((issue as { keys?: unknown }).keys)
+      ) {
+        const keys = (issue as { keys: string[] }).keys;
+        const firstKey = keys[0] ?? "";
+        message =
+          keys.length === 1
+            ? `Unrecognized key: "${firstKey}"`
+            : `Unrecognized keys: ${keys.map((k) => `"${k}"`).join(", ")}`;
+      }
+      return {
+        file,
+        path: formatPath(issue.path),
+        message,
+      };
+    }),
   };
 }
 
@@ -56,7 +71,7 @@ export function checkSessionData<S>(
 export function checkSessionText<S>(
   file: string,
   text: string,
-  schema: z.ZodType<S>,
+  schema: z.ZodMiniType<S>,
 ): CheckResult<S> {
   let data: unknown;
   try {
