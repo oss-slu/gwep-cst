@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import type { z } from "zod/mini";
 import { slideRegistry } from "../slides/registry.ts";
 import { createSessionSchema } from "./schema.ts";
 

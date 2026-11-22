@@ -1,4 +1,5 @@
-import type { z } from "zod";
+import { describeSchemaIssue } from "./schema-issue.ts";
+import type { z } from "zod/mini";
 
 /** One thing wrong with a content file, pointing at the field when known. */
 export interface ContentProblem {
@@ -38,7 +39,7 @@ function formatPath(path: readonly PropertyKey[]): string {
 export function checkSessionData<S>(
   file: string,
   data: unknown,
-  schema: z.ZodType<S>,
+  schema: z.ZodMiniType<S>,
 ): CheckResult<S> {
   const result = schema.safeParse(data);
   if (result.success) return { ok: true, session: result.data };
@@ -47,7 +48,7 @@ export function checkSessionData<S>(
     problems: result.error.issues.map((issue) => ({
       file,
       path: formatPath(issue.path),
-      message: issue.message,
+      message: describeSchemaIssue(issue),
     })),
   };
 }
@@ -56,7 +57,7 @@ export function checkSessionData<S>(
 export function checkSessionText<S>(
   file: string,
   text: string,
-  schema: z.ZodType<S>,
+  schema: z.ZodMiniType<S>,
 ): CheckResult<S> {
   let data: unknown;
   try {

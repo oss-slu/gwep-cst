@@ -1,4 +1,5 @@
-import { z } from "zod";
+import { z } from "zod/mini";
+import { describeSchemaIssue } from "../content/schema-issue.ts";
 import { calendarDaySlide } from "./calendar-day/index.ts";
 import { calendarMonthSlide } from "./calendar-month/index.ts";
 import { calendarYearSlide } from "./calendar-year/index.ts";
@@ -22,7 +23,7 @@ export interface SlideRegistry<S extends { readonly type: string }> {
    * Checks one slide: its `type` must be registered, and the slide must then
    * pass that type's strict schema. There is no fallback schema.
    */
-  readonly slideSchema: z.ZodType<S>;
+  readonly slideSchema: z.ZodMiniType<S>;
   /** Loads the component for a validated slide; nothing loads before this call. */
   loadComponent<T extends S>(slide: T): Promise<SlideComponent<T>>;
 }
@@ -50,42 +51,48 @@ export function createSlideRegistry<const M extends readonly AnySlideModule[]>(
   }
   const registered = [...byType.keys()].join(", ") || "none yet";
 
-  const slideSchema = z.unknown().transform((value, ctx): Slide => {
-    const typed = slideTypeOnly.safeParse(value);
-    if (!typed.success) {
-      for (const issue of typed.error.issues) {
-        ctx.addIssue({
-          code: "custom",
-          path: issue.path,
-          message: issue.message,
-        });
+  const slideSchema = z.pipe(
+    z.unknown(),
+    z.transform((value, ctx): Slide => {
+      const typed = slideTypeOnly.safeParse(value);
+      if (!typed.success) {
+        for (const issue of typed.error.issues) {
+          ctx.issues.push({
+            code: "custom",
+            input: value,
+            path: issue.path,
+            message: issue.message,
+          });
+        }
+        return z.NEVER;
       }
-      return z.NEVER;
-    }
 
-    const module = byType.get(typed.data.type);
-    if (module === undefined) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["type"],
-        message: `Unknown slide type "${typed.data.type}". Registered types: ${registered}`,
-      });
-      return z.NEVER;
-    }
-
-    const result = module.schema.safeParse(value);
-    if (!result.success) {
-      for (const issue of result.error.issues) {
-        ctx.addIssue({
+      const module = byType.get(typed.data.type);
+      if (module === undefined) {
+        ctx.issues.push({
           code: "custom",
-          path: issue.path,
-          message: issue.message,
+          input: value,
+          path: ["type"],
+          message: `Unknown slide type "${typed.data.type}". Registered types: ${registered}`,
         });
+        return z.NEVER;
       }
-      return z.NEVER;
-    }
-    return result.data as Slide;
-  });
+
+      const result = module.schema.safeParse(value);
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          ctx.issues.push({
+            code: "custom",
+            input: value,
+            path: issue.path,
+            message: describeSchemaIssue(issue),
+          });
+        }
+        return z.NEVER;
+      }
+      return result.data as Slide;
+    }),
+  ) as unknown as z.ZodMiniType<Slide>;
 
   return {
     modules: [...byType.values()],
