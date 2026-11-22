@@ -1,4 +1,5 @@
 import { z } from "zod/mini";
+import { describeSchemaIssue } from "../content/schema-issue.ts";
 import { calendarDaySlide } from "./calendar-day/index.ts";
 import { calendarMonthSlide } from "./calendar-month/index.ts";
 import { calendarYearSlide } from "./calendar-year/index.ts";
@@ -80,24 +81,11 @@ export function createSlideRegistry<const M extends readonly AnySlideModule[]>(
       const result = module.schema.safeParse(value);
       if (!result.success) {
         for (const issue of result.error.issues) {
-          let message = issue.message;
-          if (
-            issue.code === "unrecognized_keys" &&
-            "keys" in issue &&
-            Array.isArray((issue as { keys?: unknown }).keys)
-          ) {
-            const keys = (issue as { keys: string[] }).keys;
-            const firstKey = keys[0] ?? "";
-            message =
-              keys.length === 1
-                ? `Unrecognized key: "${firstKey}"`
-                : `Unrecognized keys: ${keys.map((k) => `"${k}"`).join(", ")}`;
-          }
           ctx.issues.push({
             code: "custom",
             input: value,
             path: issue.path,
-            message,
+            message: describeSchemaIssue(issue),
           });
         }
         return z.NEVER;
