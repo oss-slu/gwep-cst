@@ -376,13 +376,21 @@ describe("session player", () => {
       ...session,
       slides: [session.slides[0], media],
     } as unknown as PlayableSession<Slide>;
+    const loads: Promise<SlideComponent<Slide>>[] = [];
     await setup("/sessions/orientation/one", {
       loadSession: () => Promise.resolve(mixed),
+      loadComponent: (slide) => {
+        const load = testRegistry.loadComponent(slide);
+        if (slide.id === "two") loads.push(load);
+        return load;
+      },
     });
     await screen.findByText("Fixture slide one");
-    // Let the preload of slide two's (different) component finish.
+    // Wait for the preload of slide two's (different) component itself,
+    // not a timer tick, which a busy machine can outrun.
+    expect(loads).toHaveLength(1);
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await Promise.all(loads);
     });
     fireEvent.click(nextButton());
     // Rendered in the same update: no "Loading…" in between.
