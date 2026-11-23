@@ -221,4 +221,23 @@ Recommended branch protection on `main`: require a pull request, one approving r
 
 ## 7. Gate 2 status
 
-Not started. Gate 2 is evaluated against real code, configuration and behavior before M1 deployment. Untested items will be recorded as unknown, not passed.
+Recorded per pull request during M0 (#15 to #32). Full evidence is in each pull request description. This table summarizes the status at the end of M0, November 23, 2026. Untested items are recorded as unknown, not passed.
+
+| Question | Status | Evidence / gap | Where |
+| --- | --- | --- | --- |
+| Q3 Injection, XSS, path traversal, uploads | Passed | Content renders as text; media paths restricted; no shell in media checks; saved CMS files pass both validators | #25, #27, #29, #31 |
+| Q4 Validation at trust boundaries | Passed | Strict schemas at build and load; formats checked from file contents; declared image sizes checked against files | #20, #22, #23, #25, #27, #31 |
+| Q5 AI manipulation | Passed | Issue, review and content text treated as data | #15 |
+| Q6 Secrets and personal data | Passed | No credentials in source, build output or history; gitleaks in CI | #16, #17, #31 |
+| Q7 Dependencies and CI permissions | Passed | Exact pins, `ignore-scripts`, audit clean, Dependabot, CodeQL; local CMS bound to loopback and one origin | #16, #17, #31 |
+| Q10 Memory and unbounded work | Passed | One slide mounted, one-slide preload, one audio element released on stop, end, failure and leaving | #26, #29 |
+| Q13 Slow or failed dependencies (viewer) | Passed | Content, picture, sound and preload failures, with recovery, observed in the browser | #24 to #26, #29, #31 |
+| Q13 Failed dependencies (editor) | **Failed** | A stopped local backend leaves an unusable "Login with GitHub" with no recovery message | #31, follow-up #30 |
+| Q18 Resource limits | Passed | Size and pixel caps before decoding, time and output bounds on media tools | #27 |
+| Q21 Headers and production configuration | Passed locally | Effective headers tested for the site and `/admin`; Cloudflare's own handling **Not Tested** until M1 deployment | #17, #31 |
+| Q24 Code quality | Passed | Typed boundaries, no `any`, duplicated validation removed | #20, #22 to #24, #32 |
+| Performance budgets | Passed | All 8 Orientation deep links meet the 2.0 s LCP budget; initial JS 73.92 KB gzip | #32 |
+| INP | Not Tested | Not enforced in CI for M0 (§4.1) | |
+| Editor accessibility (axe) | **Failed** | Decap 3.17.3 has critical and serious violations; #14 stays open | #31, follow-up #30 |
+| Production sign-in, deployment, rollback, monitoring (Q1, Q2, Q19 to Q23) | Not Tested | No deployment in M0 | M1 |
+| Load testing (Q8, Q9, Q11, Q12) | Not Applicable for M0 | Static files only; revisit on Cloudflare in M1 | M1 |
