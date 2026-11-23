@@ -229,7 +229,7 @@ Recorded per pull request during M0 (#15 to #32). Full evidence is in each pull 
 | Q4 Validation at trust boundaries | Passed | Strict schemas at build and load; formats checked from file contents; declared image sizes checked against files | #20, #22, #23, #25, #27, #31 |
 | Q5 AI manipulation | Passed | Issue, review and content text treated as data | #15 |
 | Q6 Secrets and personal data | Passed | No credentials in source, build output or history; gitleaks in CI | #16, #17, #31 |
-| Q7 Dependencies and CI permissions | Passed | Exact pins, `ignore-scripts`, audit clean, Dependabot, CodeQL; local CMS bound to loopback and one origin | #16, #17, #31 |
+| Q7 Dependencies and CI permissions | Passed | Exact pins, `ignore-scripts`, audit clean, Dependabot; CodeQL runs through GitHub's default setup (the repository workflow runs only on manual dispatch since #19); local CMS bound to loopback and one origin | #16, #17, #19, #31 |
 | Q10 Memory and unbounded work | Passed | One slide mounted, one-slide preload, one audio element released on stop, end, failure and leaving | #26, #29 |
 | Q13 Slow or failed dependencies (viewer) | Passed | Content, picture, sound and preload failures, with recovery, observed in the browser | #24 to #26, #29, #31 |
 | Q13 Failed dependencies (editor) | **Failed** | A stopped local backend leaves an unusable "Login with GitHub" with no recovery message | #31, follow-up #30 |
