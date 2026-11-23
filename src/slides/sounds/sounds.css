@@ -15,8 +15,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  border: 2px solid var(--color-muted);
-  border-radius: 0.75rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-background);
 }
 
 .sounds__description {

@@ -1,7 +1,7 @@
 import { hasText } from "../text.ts";
 import "../slides.css";
 
-/** The shared layout of the day, month and year slides: text only, no marks. */
+/** The shared layout of the day, month and year slides: text only, no marks on the date. */
 export function CalendarSlide({
   heading,
   value,
@@ -16,16 +16,20 @@ export function CalendarSlide({
   return (
     <section className="slide">
       {hasText(heading) && <h2 className="slide__heading">{heading}</h2>}
-      <p
-        className={
-          prominent
-            ? "calendar__value calendar__value--year"
-            : "calendar__value"
-        }
-      >
-        {value}
-      </p>
-      {detail !== undefined && <p className="calendar__detail">{detail}</p>}
+      {/* Drawn as a page from a wall calendar: a frame with a coloured
+          top edge. Nothing marks the date itself (no circles). */}
+      <div className="calendar__page">
+        <p
+          className={
+            prominent
+              ? "calendar__value calendar__value--year"
+              : "calendar__value"
+          }
+        >
+          {value}
+        </p>
+        {detail !== undefined && <p className="calendar__detail">{detail}</p>}
+      </div>
     </section>
   );
 }

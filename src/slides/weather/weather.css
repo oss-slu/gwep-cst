@@ -6,6 +6,8 @@
  */
 .thermometer {
   --row: clamp(44px, 7vh, 4rem);
+  /* The marker's width comes from this container (see the thumb below). */
+  container-type: inline-size;
   position: relative;
   width: min(100%, 28rem);
   height: calc(var(--row) * var(--levels));
@@ -53,7 +55,9 @@
 }
 
 .thermometer__level--filled .thermometer__segment {
-  background: var(--color-action);
+  /* Like the liquid in a real thermometer. 5:1 against the white tube
+     (WCAG 1.4.11 asks for 3:1). */
+  background: var(--color-accent);
 }
 
 /* Vertical range input over the rows, with higher values at the top. */
@@ -82,7 +86,10 @@
 /* The marker: a thick outline around the current level's row. */
 .thermometer__input::-webkit-slider-thumb {
   box-sizing: border-box;
-  width: 100%;
+  /* The container's width, not 100%: in a vertical range input a
+     percentage width does not resolve, and the marker shrank to a thin
+     bar. cqw, not cqi: the input's inline axis is vertical. */
+  width: 100cqw;
   height: var(--row);
   border: 6px solid var(--color-text);
   border-radius: 0.75rem;
@@ -92,7 +99,7 @@
 
 .thermometer__input::-moz-range-thumb {
   box-sizing: border-box;
-  width: 100%;
+  width: 100cqw;
   height: var(--row);
   border: 6px solid var(--color-text);
   border-radius: 0.75rem;

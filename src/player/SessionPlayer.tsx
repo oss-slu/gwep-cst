@@ -13,6 +13,7 @@ import { LoadErrorView } from "../app/LoadErrorView.tsx";
 import { slidePath } from "../app/paths.ts";
 import { AudioProvider, useAudio } from "../media/AudioProvider.tsx";
 import { ErrorBoundary } from "../ui/ErrorBoundary.tsx";
+import { ArrowLeft, ArrowRight } from "../ui/icons.tsx";
 import { Loading } from "../ui/Loading.tsx";
 import { StatusMessage } from "../ui/StatusMessage.tsx";
 import type { AnySlide, PlayableSession, PlayerData } from "./player-data.ts";
@@ -199,26 +200,38 @@ function Player<S extends AnySlide>({
       <nav aria-label={ui.player.controls} className="player__controls">
         <button
           type="button"
-          className="button"
+          className="button button--secondary player__step"
           disabled={index === 0}
           onClick={() => {
             goTo(index - 1);
           }}
         >
+          <ArrowLeft />
           {ui.player.previous}
         </button>
-        <p className="player__position" aria-live="polite">
-          {position}
-        </p>
+        <div className="player__progress">
+          <p className="player__position" aria-live="polite">
+            {position}
+          </p>
+          {/* A picture of the same position, so it is hidden from
+              assistive technology; the text above is what they read. */}
+          <div className="player__bar" aria-hidden="true">
+            <div
+              className="player__bar-fill"
+              style={{ width: `${String(((index + 1) / total) * 100)}%` }}
+            />
+          </div>
+        </div>
         <button
           type="button"
-          className="button"
+          className="button player__step"
           disabled={index === total - 1}
           onClick={() => {
             goTo(index + 1);
           }}
         >
           {ui.player.next}
+          <ArrowRight />
         </button>
       </nav>
     </main>

@@ -4,7 +4,9 @@
     "loading": "Loading…",
     "backToSessions": "Back to sessions",
     "sessionList": {
+      "intro": "Fourteen themed group sessions to enjoy together, in the room or on a video call.",
       "heading": "Sessions",
+      "start": "Start session",
       "comingSoon": "Coming soon"
     },
     "player": {

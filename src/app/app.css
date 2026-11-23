@@ -17,66 +17,226 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   min-width: 44px;
+  /* Never wider than the screen: with very large text, the label wraps. */
+  max-width: 100%;
   min-height: 44px;
-  padding: 0.5rem 1.25rem;
+  padding: 0.5rem 1.5rem;
   border: 2px solid var(--color-action);
-  border-radius: 0.5rem;
+  border-radius: 999px;
   font: inherit;
   font-weight: 600;
   line-height: 1.2;
   color: var(--color-on-action);
   background: var(--color-action);
+  box-shadow: 0 1px 2px rgb(28 37 51 / 0.12);
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+/* A little taller where there is room; phones keep the 44 px minimum so
+   slides keep their space. */
+@media (min-width: 30rem) {
+  .button {
+    min-height: 48px;
+  }
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--color-action-hover);
+  background: var(--color-action-hover);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .button--secondary {
   color: var(--color-action);
-  background: var(--color-background);
+  background: var(--color-surface);
+}
+
+.button--secondary:hover:not(:disabled) {
+  color: var(--color-action-hover);
+  background: var(--color-action-soft);
 }
 
 .button:disabled {
   border-color: var(--color-muted);
   color: var(--color-muted);
-  background: var(--color-background);
+  background: var(--color-surface);
+  box-shadow: none;
   cursor: not-allowed;
 }
 
-.sessions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin: 0;
-  padding-left: 2.5rem;
+.icon {
+  flex-shrink: 0;
+  width: 1.1em;
+  height: 1.1em;
 }
 
-.sessions__item {
-  padding-left: 0.25rem;
+/* The session list: a welcome band, then the sessions as cards. */
+.home {
+  padding: 0;
 }
 
-.sessions__link,
-.sessions__unavailable {
+.home__intro {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(2rem, 6vw, 4.5rem) 1rem clamp(2.5rem, 7vw, 5rem);
+  color: var(--color-on-action);
+  /* White text on these blues is at least 8:1. */
+  background:
+    radial-gradient(
+      circle at 85% 20%,
+      rgb(255 255 255 / 0.12) 0 12rem,
+      transparent 12rem
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgb(255 255 255 / 0.08) 0 18rem,
+      transparent 18rem
+    ),
+    linear-gradient(135deg, #0b4f9c, #0a3d73);
+}
+
+.home__intro-inner,
+.home__sessions {
   box-sizing: border-box;
-  display: flex;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.home__title {
+  max-width: 20ch;
+  margin: 0;
+  font-size: clamp(2.5rem, 1.75rem + 3vw, 4rem);
+  line-height: 1.1;
+}
+
+.home__lead {
+  max-width: 36ch;
+  margin: 1rem 0 0;
+  font-size: clamp(1.5rem, 1.35rem + 0.6vw, 1.875rem);
+  line-height: 1.4;
+}
+
+/* A short accent rule under the title. */
+.home__title::after {
+  content: "";
+  display: block;
+  width: 4rem;
+  height: 0.375rem;
+  margin-top: 1.25rem;
+  border-radius: 999px;
+  background: #f2b98f;
+}
+
+.home__sessions {
+  padding: clamp(1.5rem, 4vw, 3rem) 1rem clamp(2rem, 5vw, 4rem);
+}
+
+.home__sessions-heading {
+  margin: 0 0 1.5rem;
+  font-size: 2rem;
+  line-height: 1.25;
+}
+
+.sessions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.session-card__link,
+.session-card__body {
+  box-sizing: border-box;
+  display: grid;
+  /* minmax(0, ...) lets a long title such as "Animal Categorization"
+     break instead of widening the card when text is very large. */
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem 1rem;
+  height: 100%;
+  min-height: 6rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+}
+
+/* Coming soon: a quiet card, still easy to read. */
+.session-card__body {
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* Available: the whole card is one large link that stands out. */
+.session-card__link {
+  border: 2px solid var(--color-action);
+  color: var(--color-on-action);
+  background: var(--color-action);
+  box-shadow: var(--shadow-raised);
+  text-decoration: none;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.session-card__link:hover {
+  background: var(--color-action-hover);
+  box-shadow:
+    0 2px 4px rgb(28 37 51 / 0.1),
+    0 14px 32px rgb(28 37 51 / 0.16);
+  transform: translateY(-2px);
+}
+
+.session-card__number {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text);
+  background: var(--color-accent-soft);
+}
+
+.session-card__link .session-card__number {
+  color: var(--color-action);
+  background: var(--color-surface);
+}
+
+.session-card__title {
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.session-card__status {
+  grid-column: 2;
+  justify-self: start;
+  line-height: 1.25;
+}
+
+.session-card__soon {
+  color: var(--color-muted);
+}
+
+.session-card__start {
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 1rem;
-  min-height: 44px;
-  padding: 0.25rem 0;
-}
-
-.sessions__link {
-  color: var(--color-action);
+  gap: 0.5rem;
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
-.sessions__soon {
-  padding: 0 0.5rem;
-  border: 2px solid var(--color-muted);
-  border-radius: 0.5rem;
 }
 
 .status__heading {
