@@ -30,10 +30,13 @@
 .player__slide {
   min-height: 0;
   overflow: auto;
-  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
-  box-shadow: var(--shadow-raised);
+  /* The edge is drawn as a shadow, not a border, so it takes no room from
+     the slide. */
+  box-shadow:
+    0 0 0 1px var(--color-border),
+    var(--shadow-raised);
 }
 
 .player__controls {
@@ -48,7 +51,9 @@
 
 .player__progress {
   display: flex;
-  flex: 1 1 auto;
+  /* A zero basis: the buttons decide when the row wraps, and the position
+     text wraps within the space left rather than pushing a second row. */
+  flex: 1 1 0;
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
@@ -78,13 +83,16 @@
 /*
  * On narrow screens such as phones the controls give the slide every pixel
  * they can: the buttons keep their text but lose the arrows, extra padding
- * and extra height, so "Slide 7 of 11" stays on one line.
+ * and extra height, and the progress bar gives way to the text alone.
  */
 @media (max-width: 30rem) {
   .player__header .button,
   .player__controls .button {
-    min-height: 44px;
-    padding-inline: 0.75rem;
+    padding-inline: 0.625rem;
+  }
+
+  .player__controls {
+    column-gap: 0.5rem;
   }
 
   .player__header .icon,
@@ -92,11 +100,7 @@
     display: none;
   }
 
-  .player__position {
-    white-space: nowrap;
-  }
-
   .player__bar {
-    height: 0.375rem;
+    display: none;
   }
 }

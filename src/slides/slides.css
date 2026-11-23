@@ -58,6 +58,15 @@
   background: var(--color-background);
 }
 
+/* On narrow screens such as phones the page gives the date every pixel of
+   the slide's width, so a long name such as "Wednesday" never clips. */
+@media (max-width: 40rem) {
+  .calendar__page {
+    padding-inline: 0;
+    border-inline: 0;
+  }
+}
+
 .calendar__value {
   margin: 0;
   font-size: clamp(2.75rem, 1.5rem + 7vw, 7rem);
