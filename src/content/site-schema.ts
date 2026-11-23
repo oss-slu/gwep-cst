@@ -19,7 +19,12 @@ export const siteSchema = z.strictObject({
   ui: z.strictObject({
     loading: text,
     backToSessions: text,
-    sessionList: z.strictObject({ heading: text, comingSoon: text }),
+    sessionList: z.strictObject({
+      intro: text,
+      heading: text,
+      start: text,
+      comingSoon: text,
+    }),
     player: z.strictObject({
       previous: text,
       next: text,

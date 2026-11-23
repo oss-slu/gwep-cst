@@ -35,7 +35,9 @@ describe("session list", () => {
     expect(items.map((item) => item.textContent)).toEqual(
       catalog.map(
         (entry) =>
-          entry.title + (entry.available ? "" : ui.sessionList.comingSoon),
+          String(entry.number) +
+          entry.title +
+          (entry.available ? ui.sessionList.start : ui.sessionList.comingSoon),
       ),
     );
     expect(catalog.map((entry) => entry.number)).toEqual(
@@ -43,10 +45,14 @@ describe("session list", () => {
     );
   });
 
-  it("links only Orientation; the other thirteen say Coming soon and are not focusable", async () => {
+  it("links only Orientation, by name; the other thirteen say Coming soon and are not focusable", async () => {
     await renderAt("/");
     const links = screen.getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual(["Orientation"]);
+    // The link's name includes the session's title, so it makes sense in a
+    // screen reader's list of links.
+    expect(links.map((link) => link.textContent)).toEqual([
+      `9Orientation${ui.sessionList.start}`,
+    ]);
     expect(links[0]?.getAttribute("href")).toBe("/sessions/orientation");
     expect(screen.getAllByText(ui.sessionList.comingSoon)).toHaveLength(13);
     const list = screen.getByRole("list");
