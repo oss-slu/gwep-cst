@@ -68,7 +68,7 @@ Working assumptions until GWEP answers the requirements questions (section 11):
 | Concern | Choice | Notes |
 | --- | --- | --- |
 | Framework | React with TypeScript (strict), built with Vite | Static single-page app, no server code for viewers |
-| Routing | React Router | `/` session list, `/sessions/:slug` player, `/sessions/:slug/:slide` deep links |
+| Routing | wouter | `/` session list, `/sessions/:slug` player, `/sessions/:slug/:slide` deep links. Chosen in M0-06 (#9) |
 | Content | JSON files in the repository, one per session, validated with zod at build time | Content never hardcoded in components |
 | CMS | Decap CMS (git-based), loaded at `/admin` | Edits become commits to GitHub. Local development uses `decap-server`. Production login through a GitHub OAuth proxy on Cloudflare (to be set up). Sveltia CMS is a compatible fallback |
 | Media | `public/media/<session>/...` in the repository for the prototype | Move large audio to Cloudflare R2 later if needed |

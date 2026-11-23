@@ -28,21 +28,29 @@ Available once the project is scaffolded:
 | `npm test` | Unit and component tests (Vitest) |
 | `npm run test:e2e` | End-to-end and accessibility tests (Playwright with axe-core) |
 | `npm run validate-content` | Validate every session file against the content schema |
-| `npx decap-server` | Local backend for trying the CMS without GitHub login |
+| `npm run cms:demo-copy` then `npm run cms:local` | Try the CMS locally in a disposable copy, without GitHub login (see README) |
 
 Every pull request must pass lint, typecheck, test, validate-content and build in CI.
 
-## Planned layout
+## Layout
 
 ```
 content/sessions/<slug>.json   session content, edited through the CMS
-public/admin/                  Decap CMS (index.html and config.yml)
+content/                       session catalog and site text
+public/admin/                  Decap CMS (index.html, generated config.yml)
 public/media/<slug>/           images and audio per session
-src/components/slides/         one component per slide type
-src/content/schema.ts          zod schema for sessions and slides
-src/pages/                     session list and session player
-tests/e2e/                     Playwright tests
-docs/                          project context, decisions, handbook
+public/_headers                security and caching headers
+src/app/                       routing, layout, error boundary
+src/content/                   zod schemas, ContentSource, validation
+src/slides/<type>/             one folder per slide type: schema, component, CMS fields, tests
+src/player/                    session player, navigation, preload
+src/sessions/                  session list
+src/media/                     AudioService and audio player
+src/ui/                        shared accessible components
+scripts/                       content, media and CMS checks, CMS demo tools
+tests/e2e/                     Playwright and axe tests
+tests/node/                    tests of the scripts and the build gate
+docs/                          project context, design, provenance
 ```
 
 ## Conventions

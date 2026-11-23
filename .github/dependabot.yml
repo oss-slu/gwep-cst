@@ -8,6 +8,11 @@ updates:
     cooldown:
       default-days: 14
     open-pull-requests-limit: 5
+    ignore:
+      # typescript-eslint 8 supports TypeScript below 6.1 only. Remove this
+      # when a typescript-eslint release supports the next major.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
