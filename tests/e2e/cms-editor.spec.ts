@@ -254,6 +254,21 @@ async function expectFocusVisible(target: Locator) {
   expect(ring, `${target.toString()}: ${JSON.stringify(style)}`).toBe(true);
 }
 
+function containsGitHubStatusUrl(text: string): boolean {
+  const expected = new URL(GITHUB_STATUS);
+  const quotedUrls = /(["'])(https?:\/\/.*?)\1/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = quotedUrls.exec(text)) !== null) {
+    try {
+      if (new URL(match[2]).href === expected.href) return true;
+    } catch {
+      // Ignore malformed URLs in the console message.
+    }
+  }
+  return false;
+}
+
 /** Policy violations other than the refused GitHub status check. */
 function watchPolicy(page: Page): string[] {
   const violations: string[] = [];
@@ -261,7 +276,7 @@ function watchPolicy(page: Page): string[] {
     const text = message.text();
     if (
       text.includes("Content Security Policy") &&
-      !text.includes(GITHUB_STATUS)
+      !containsGitHubStatusUrl(text)
     )
       violations.push(text);
   });
