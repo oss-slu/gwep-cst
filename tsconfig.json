@@ -20,12 +20,14 @@
   },
   "include": [
     "src",
+    "admin",
     "tests/e2e",
     "tests/unit",
     "tests/support",
     "tests/visual",
     "content",
     "vite.config.ts",
+    "vite.admin.config.ts",
     "playwright.config.ts",
     "vitest.timezones.config.ts"
   ]

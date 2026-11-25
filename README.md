@@ -46,7 +46,6 @@ Then open http://localhost:4173/ and choose Orientation. The demo uses placehold
 | `npm run cms:generate` | Regenerate `public/admin/config.yml` from the slide registry |
 | `npm run cms:check` | Fail if `public/admin/config.yml` is out of date (runs in CI) |
 | `npm run cms:demo-copy` | Make a disposable copy of this repository for the local content editor (see below) |
-| `npm run cms:local` | Start Decap's local backend, only inside a disposable copy |
 | `npm run check:bundle` | Fail if the initial JavaScript is over 100 kB gzip (run after `build`) |
 | `npm run check:lighthouse` | Lighthouse budgets, median of three mobile runs (run after `build`; needs Google Chrome) |
 
@@ -81,7 +80,7 @@ Where each media file came from, and its rights, is recorded in `docs/MEDIA_PROV
 
 ## Local content editor (demo)
 
-GWEP staff will edit content in Decap CMS at `/admin`. For now it runs only on your own computer, with no GitHub account, in a **disposable copy** of the repository, so edits never touch your working copy or GitHub. Production sign-in, publishing and previews are not set up yet.
+GWEP staff will edit content in [Sveltia CMS](https://sveltiacms.app/) at `/admin`. For now it runs only on your own computer, with no GitHub account, on a **disposable copy** of the repository, so edits never touch your working copy or GitHub. Production sign-in, publishing and previews come in M1.
 
 Once, make the copy next to this repository, as `../gwep-cst-cms-demo` (the command takes no arguments, and refuses if the copy already exists):
 
@@ -89,21 +88,16 @@ Once, make the copy next to this repository, as `../gwep-cst-cms-demo` (the comm
 npm run cms:demo-copy
 ```
 
-Then, in two terminals, both inside the copy (FFmpeg on `PATH` for the validators): Decap's local backend in one, the site and the editor in the other.
+Then start the copy's site and editor (FFmpeg on `PATH` if you want to run the validators in the copy):
 
 ```sh
 cd ../gwep-cst-cms-demo
-npm run cms:local
-```
-
-```sh
-cd ../gwep-cst-cms-demo
-npm run dev -- --port 5173 --strictPort
+npm run dev
 ```
 
 Type or paste the commands as shown, without trailing comments: zsh, the macOS shell, does not treat `#` as a comment when typing commands, so anything after it is passed to the command.
 
-Open http://localhost:5173/admin/ (use `localhost`, not `127.0.0.1`), choose **Login**, and edit. Saving creates a draft, set its status to **Ready**, then **Publish → Publish now**; each step is a commit in the copy's own git history, made as "CMS demo". The player at http://localhost:5173/ shows the change, and `npm run validate-content` and `npm run validate-media` in the copy check it.
+Open http://localhost:5173/admin/ in **Google Chrome or Microsoft Edge** (local editing uses the browser's folder access, which other browsers do not have). Choose **Work with Local Repository** and pick the `gwep-cst-cms-demo` folder. Edit, then **Save**: the editor writes the changed files straight into the copy. The player at http://localhost:5173/ shows the change after a reload, and `npm run validate-content` and `npm run validate-media` in the copy check it. The editor does not commit; commit in the copy yourself if you want a history.
 
 **Reset:** delete the copy and make a new one from the current commit (`cd` back to the repository first):
 
@@ -115,13 +109,17 @@ npm run cms:demo-copy
 Safeguards:
 
 - `cms:demo-copy` takes no arguments and always makes `../gwep-cst-cms-demo`. It clones the current commit onto a local `main`, removes every git remote, sets the commit identity to `CMS demo <cms-demo@localhost>`, links `node_modules` (excluded from git) and writes a marker in `.git/`.
-- `cms:local` refuses to start anywhere but the root of such a copy (marker present, its commit known, no remotes). It runs `decap-server` listening on 127.0.0.1:8081 only, accepting requests only from `http://localhost:5173` and only with a loopback `Host`, in git mode. These settings are passed explicitly, so a `.env` file cannot change them.
-- Uploads go to `public/media/<session>/` and are referenced as `/media/<session>/<file>`, the path rule both validators enforce. Type the picture's real width and height, and remove variants that no longer match; `validate-media` checks both.
-- `decap-server` 3.11.6 depends on `@decap/cli` 0.1.3, whose `@hapi/joi` and unused `zod` 3 have high-severity advisories with no fix in those packages. `package.json` `overrides` replace them inside `@decap/cli` only, with `joi` 17.13.9 (the maintained package, same API) and `zod` 4.6.7. Remove the overrides once a `decap-server` release no longer needs them.
+- The editor opens only such a copy. Any folder without the marker, or with a git remote, is refused before anything is read or written, with a message saying how to recover (`admin/folder-guard.ts`).
+- Uploads go to `public/media/<session>/` and are referenced as `/media/<session>/<file>`, the path rule both validators enforce. Type the picture's real width and height, and remove variants that no longer match; `validate-media` checks both. Stock photo services are turned off.
+- The editor is bundled from the exactly pinned `@sveltia/cms` package and served from this site, never from a CDN: `npm run build` builds it into `dist/admin/` (`vite.admin.config.ts`), and the dev server builds the same editor on the first `/admin` request and serves it as plain files, without Vite's live-reload client, which could reload the page while the editor saves.
 
-Headers: `public/_headers` gives `/admin` its own content security policy (the pinned Decap script from unpkg with an integrity hash, inline styles, `blob:` for uploads) and no other change. Decap 3.17.3 also needs `'unsafe-eval'`, which only the local dev and preview servers add (with the loopback backend), never the deployed policy, so the editor does not run on the deployed site yet.
+Headers: `public/_headers` gives `/admin` its own content security policy: scripts, fonts and connections from this site only, no `'unsafe-eval'`, inline styles, and `blob:`/`data:` for picture previews and uploads. The dev and preview servers send exactly the same headers. Sveltia's built-in check of GitHub's status page is refused by that policy, so it never leaves the browser.
 
-Known limits: Decap's own interface fails automated accessibility checks (unnamed icon buttons, contrast, an untitled frame, media cards not reachable by Tab), and with `cms:local` stopped it falls back to a "Login with GitHub" button that does nothing locally. A follow-up will fix or replace the editor in M1.
+Manual check, after editor changes: Playwright cannot operate the browser's native folder picker, so the tests use a stand-in folder. Once, in Chrome, choose **Work with Local Repository**, pick the real `gwep-cst-cms-demo` folder and save an edit; then pick this repository's own folder and confirm it is refused.
+
+Slide list: Sveltia CMS 0.263.0 renders list items only as they scroll into view, which left later slides out of the Tab order and hidden from screen readers. `admin/render-at-once.ts` has the slides in the edit pane's slide list rendered at once, so Tab reaches every slide; a test reaches slide 7 and the closing slide by Tab alone. Remove it once Sveltia renders every list item itself.
+
+Known limit: signing in with GitHub is shown but not set up locally (production sign-in is a separate M1 issue).
 
 ## CMS config
 

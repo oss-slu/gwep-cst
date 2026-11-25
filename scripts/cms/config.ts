@@ -1,6 +1,7 @@
-// Builds the Decap CMS config from the slide registry. Slide fields come only
-// from each slide module's cmsFields; this file adds the session-level fields
-// and the provisional Decap settings that M0-10 verifies against a live portal.
+// Builds the content editor's config (Sveltia CMS, which reads the Decap CMS
+// format) from the slide registry. Slide fields come only from each slide
+// module's cmsFields; this file adds the session-level fields and the editor
+// settings.
 import type { CmsField } from "../../src/slides/cms-field.ts";
 import { slideRegistry } from "../../src/slides/registry.ts";
 import type { AnySlideModule } from "../../src/slides/types.ts";
@@ -68,9 +69,17 @@ export function buildCmsConfig(
   modules: readonly AnySlideModule[] = slideRegistry.modules,
 ) {
   return {
+    // Production sign-in comes in M1. On this computer the editor works on
+    // a local folder instead (Work with Local Repository), which needs no
+    // backend server.
     backend: { name: "github", repo: "oss-slu/gwep-cst", branch: "main" },
-    local_backend: true,
     publish_mode: "editorial_workflow",
+    // Pictures come only from this site's media folders: no stock photo
+    // services.
+    media_libraries: { stock_assets: false },
+    // Leave optional fields out of the saved file when they are empty, as
+    // the content files already do, so a save changes only what was edited.
+    output: { omit_empty_optional_fields: true },
     media_folder: "public/media",
     public_folder: "/media",
     collections: [

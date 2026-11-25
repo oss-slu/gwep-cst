@@ -1,7 +1,8 @@
 // Makes a disposable copy of this repository for the local CMS demo: a clone
 // of the current commit on a local "main" branch, with no git remotes, the
 // project's node_modules linked in, a demo-only git identity, and a marker
-// that npm run cms:local checks before starting.
+// that the editor's folder guard (admin/folder-guard.ts) requires before it
+// opens a folder.
 // It takes no arguments: the copy is always ../gwep-cst-cms-demo, next to the
 // repository it is run from, so no typed path can place it anywhere else.
 // Usage: npm run cms:demo-copy
@@ -38,12 +39,13 @@ for (const remote of (await git(destination, "remote"))
   .filter(Boolean)) {
   await git(destination, "remote", "remove", remote);
 }
-// Commits made by the CMS in git mode use this identity, not yours.
+// Any commit made in the copy (by hand, or by the editor's optional "Commit
+// Changes to Git" setting) uses this identity, not yours.
 await git(destination, "config", "user.name", "CMS demo");
 await git(destination, "config", "user.email", "cms-demo@localhost");
 await symlink(join(source, "node_modules"), join(destination, "node_modules"));
-// The CMS in git mode commits every changed file. The .gitignore entry
-// "node_modules/" matches only a folder, not this link, so exclude it here.
+// The .gitignore entry "node_modules/" matches only a folder, not this
+// link, so exclude it here: a commit of every change must never include it.
 await appendFile(
   join(destination, ".git", "info", "exclude"),
   "node_modules\n",
@@ -59,5 +61,5 @@ console.log(
   `  from commit ${commit.slice(0, 7)}, on branch main, with no git remotes.`,
 );
 console.log(
-  `Next, in two terminals inside the copy:\n  npm run cms:local\n  npm run dev`,
+  `Next, inside the copy:\n  npm run dev\nThen open http://localhost:5173/admin/ in Chrome or Edge, choose Work with Local Repository and pick ${destination}.`,
 );

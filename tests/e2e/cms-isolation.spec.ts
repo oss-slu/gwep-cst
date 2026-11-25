@@ -3,9 +3,9 @@ import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { effectiveHeaders, parseHeadersFile } from "../../scripts/headers.ts";
 
-// The viewer never loads the content editor: no Decap code in its files and
-// no requests to unpkg, /admin or the local CMS backend, so it works the
-// same whether or not the local CMS is running.
+// The viewer never loads the content editor: no editor code in its files
+// and no requests to /admin or any other origin, so it works the same
+// whether or not anyone is editing.
 
 test("the built viewer contains no editor code", () => {
   const files = [
@@ -14,7 +14,7 @@ test("the built viewer contains no editor code", () => {
   ];
   for (const file of files) {
     const text = readFileSync(file, "utf8");
-    expect(text, file).not.toMatch(/decap|unpkg|localhost:8081/i);
+    expect(text, file).not.toMatch(/sveltia|decap|unpkg/i);
   }
 });
 
@@ -41,20 +41,19 @@ test("walking through Orientation makes no editor or CMS requests", async ({
   }
 });
 
-test("a regular checkout serves /admin with exactly the deployed policy", async ({
+test("the dev and preview servers serve /admin with exactly the deployed policy", async ({
   request,
 }) => {
   const deployed = effectiveHeaders(
     parseHeadersFile(readFileSync("public/_headers", "utf8")),
     "/admin/",
   )["content-security-policy"];
-  // The production preview and the dev server of this repository, which is
-  // not a disposable demo copy.
+  // The production preview and the dev server.
   for (const origin of ["http://localhost:4173", "http://localhost:4175"]) {
     const response = await request.get(`${origin}/admin/`);
     const policy = response.headers()["content-security-policy"];
     expect(policy, origin).toBe(deployed);
     expect(policy, origin).not.toContain("unsafe-eval");
-    expect(policy, origin).not.toContain("localhost:8081");
+    expect(await response.text(), origin).not.toContain("/@vite/client");
   }
 });

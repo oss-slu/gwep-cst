@@ -1,4 +1,4 @@
-// The Decap CMS widgets slide modules may use, typed so a field cannot be
+// The content editor's field types (widgets) slide modules may use, typed so a field cannot be
 // misspelled. Labels and hints are shown to GWEP editors, so write them in
 // plain language.
 

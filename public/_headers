@@ -1,12 +1,12 @@
 # Cloudflare static asset headers. Rules apply in file order; a path that
 # matches several rules gets the headers of all of them.
-# /admin (the Decap content editor) keeps every site header except the
-# content security policy, which it replaces with its own: Decap is the one
-# script loaded from another origin (pinned by version and integrity hash in
-# public/admin/index.html) and it injects inline styles. Production sign-in
-# will add the GitHub API to connect-src (M1). This deployed policy never
-# allows 'unsafe-eval', so Decap does not run here yet; the loopback-served
-# local demo (vite.config.ts) adds 'unsafe-eval' and the local backend only.
+# /admin (the Sveltia CMS content editor) keeps every site header except the
+# content security policy, which it replaces with its own. The editor is
+# bundled from the pinned npm package and served from this site (see
+# vite.admin.config.ts), so scripts, styles, fonts and connections are 'self'
+# only: no other origin and no 'unsafe-eval'. It needs inline styles, and
+# blob: and data: for picture previews and uploads. Production sign-in will
+# add the GitHub API to connect-src (M1).
 
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; font-src 'self'; connect-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
@@ -20,10 +20,13 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+/admin/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /admin
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://unpkg.com/decap-cms@3.17.3/dist/decap-cms.js; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; font-src 'self'; connect-src 'self' blob: data:; manifest-src 'self' blob:; frame-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
 
 /admin/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://unpkg.com/decap-cms@3.17.3/dist/decap-cms.js; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; font-src 'self'; connect-src 'self' blob: data:; manifest-src 'self' blob:; frame-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'

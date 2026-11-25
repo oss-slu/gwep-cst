@@ -6,31 +6,32 @@
     {
       "type": "title",
       "id": "welcome",
+      "notes": "Placeholder demo wording until GWEP supplies the text.",
       "heading": "Welcome to Orientation",
-      "subheading": "This demo uses placeholder pictures, sounds and answers.",
-      "notes": "Placeholder demo wording until GWEP supplies the text."
+      "subheading": "This demo uses placeholder pictures, sounds and answers."
     },
     {
       "type": "calendar-day",
       "id": "day",
-      "heading": "What day is it today?",
-      "notes": "Placeholder demo wording until GWEP supplies the text."
+      "notes": "Placeholder demo wording until GWEP supplies the text.",
+      "heading": "What day is it today?"
     },
     {
       "type": "calendar-month",
       "id": "month",
-      "heading": "What month is it?",
-      "notes": "Placeholder demo wording until GWEP supplies the text."
+      "notes": "Placeholder demo wording until GWEP supplies the text.",
+      "heading": "What month is it?"
     },
     {
       "type": "calendar-year",
       "id": "year",
-      "heading": "What year is it?",
-      "notes": "Placeholder demo wording until GWEP supplies the text."
+      "notes": "Placeholder demo wording until GWEP supplies the text.",
+      "heading": "What year is it?"
     },
     {
       "type": "weather",
       "id": "weather",
+      "notes": "Placeholder demo wording until GWEP supplies the text.",
       "heading": "What is the weather like today?",
       "levels": [
         {
@@ -48,12 +49,12 @@
         {
           "label": "Hot"
         }
-      ],
-      "notes": "Placeholder demo wording until GWEP supplies the text."
+      ]
     },
     {
       "type": "sounds",
       "id": "sounds",
+      "notes": "Placeholder sounds generated for the demo; GWEP will supply the real clips.",
       "heading": "What can you hear?",
       "clips": [
         {
@@ -74,12 +75,12 @@
             "description": "Placeholder sound: a rising whistle"
           }
         }
-      ],
-      "notes": "Placeholder sounds generated for the demo; GWEP will supply the real clips."
+      ]
     },
     {
       "type": "reveal",
       "id": "landmark-state",
+      "notes": "GWEP prompt 1 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones.",
       "prompt": "What state is the famous landmark located?",
       "image": {
         "src": "/media/orientation/placeholder-1.png",
@@ -97,12 +98,12 @@
           }
         ]
       },
-      "answer": "Placeholder answer: GWEP will supply the real answer.",
-      "notes": "GWEP prompt 1 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones."
+      "answer": "Placeholder answer: GWEP will supply the real answer."
     },
     {
       "type": "reveal",
       "id": "landmark-country",
+      "notes": "GWEP prompt 2 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones.",
       "prompt": "The famous landmark is located in what country?",
       "image": {
         "src": "/media/orientation/placeholder-2.png",
@@ -120,12 +121,12 @@
           }
         ]
       },
-      "answer": "Placeholder answer: GWEP will supply the real answer.",
-      "notes": "GWEP prompt 2 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones."
+      "answer": "Placeholder answer: GWEP will supply the real answer."
     },
     {
       "type": "reveal",
       "id": "food-countries",
+      "notes": "GWEP prompt 3 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones.",
       "prompt": "What countries are known for this food?",
       "image": {
         "src": "/media/orientation/placeholder-3.png",
@@ -143,12 +144,12 @@
           }
         ]
       },
-      "answer": "Placeholder answer: GWEP will supply the real answer.",
-      "notes": "GWEP prompt 3 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones."
+      "answer": "Placeholder answer: GWEP will supply the real answer."
     },
     {
       "type": "reveal",
       "id": "clothing-countries",
+      "notes": "GWEP prompt 4 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones.",
       "prompt": "What country is known for this type of clothing?",
       "image": {
         "src": "/media/orientation/placeholder-4.png",
@@ -166,14 +167,13 @@
           }
         ]
       },
-      "answer": "Placeholder answer: GWEP will supply the real answer.",
-      "notes": "GWEP prompt 4 of 4, verbatim from docs/PROJECT_CONTEXT.md section 10. Placeholder picture and answer until GWEP supplies the real ones."
+      "answer": "Placeholder answer: GWEP will supply the real answer."
     },
     {
       "type": "title",
       "id": "closing",
-      "heading": "Thank you",
-      "notes": "Placeholder demo wording until GWEP supplies the text."
+      "notes": "Placeholder demo wording until GWEP supplies the text.",
+      "heading": "Thank you"
     }
   ]
 }
