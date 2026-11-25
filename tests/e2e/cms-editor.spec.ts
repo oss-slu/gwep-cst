@@ -34,7 +34,7 @@ const NEW_ALT = "Replacement placeholder picture for the demo edit.";
 const LOCAL = "Work with Local Repository";
 // Sveltia CMS checks GitHub's status page; the editor's policy refuses it,
 // so the request never leaves the browser.
-const GITHUB_STATUS = "https://www.githubstatus.com/";
+const GITHUB_STATUS_ORIGIN = "https://www.githubstatus.com";
 
 // Terminal colour codes: ESC "[" digits "m".
 const COLOUR_CODES = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
@@ -254,19 +254,16 @@ async function expectFocusVisible(target: Locator) {
   expect(ring, `${target.toString()}: ${JSON.stringify(style)}`).toBe(true);
 }
 
-function containsGitHubStatusUrl(text: string): boolean {
-  const expected = new URL(GITHUB_STATUS);
-  const quotedUrls = /(["'])(https?:\/\/.*?)\1/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = quotedUrls.exec(text)) !== null) {
-    try {
-      if (new URL(match[2]).href === expected.href) return true;
-    } catch {
-      // Ignore malformed URLs in the console message.
-    }
+/** The origin of the URL a policy violation names, if it names one. */
+function blockedOrigin(text: string): string | undefined {
+  // Chrome names the URL in quotes in one message and bare in the other.
+  const url = /https?:\/\/[^\s'"]+/.exec(text)?.[0];
+  if (url === undefined) return undefined;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return undefined;
   }
-  return false;
 }
 
 /** Policy violations other than the refused GitHub status check. */
@@ -276,7 +273,7 @@ function watchPolicy(page: Page): string[] {
     const text = message.text();
     if (
       text.includes("Content Security Policy") &&
-      !containsGitHubStatusUrl(text)
+      blockedOrigin(text) !== GITHUB_STATUS_ORIGIN
     )
       violations.push(text);
   });
@@ -331,7 +328,7 @@ test("/admin is served with the deployed editor policy, and redirects like the h
   // The built editor: no live-reload client, no inline script.
   const html = await page.text();
   expect(html).not.toContain("/@vite/client");
-  expect(html).not.toMatch(/<script(?![^>]*\bsrc=)[^>]*>/);
+  expect(html).not.toMatch(/<script(?![^>]*\bsrc=)[^>]*>/i);
 });
 
 test("the editor shows how to open the demo copy, and opens it with no account", async ({
@@ -617,7 +614,19 @@ test("the Orientation edit, by keyboard with visible focus: saved, valid and sho
     expect(stdout, script).toContain("no problems");
   }
 
-  // The copy's player shows the edit.
+  // The copy's player shows the edit. The dev server learns about the new
+  // picture from its file watcher, so wait until it serves it.
+  await expect
+    .poll(
+      async () =>
+        (
+          await page.request.get(
+            `${SITE}/media/orientation/cms-replacement.png`,
+          )
+        ).status(),
+      { timeout: 15_000 },
+    )
+    .toBe(200);
   await page.goto(`${SITE}/sessions/orientation/landmark-state`);
   await expect(page.locator(".player__slide h2")).toHaveText(NEW_PROMPT);
   const picture = page.getByAltText(NEW_ALT);
