@@ -8,6 +8,7 @@ import {
   symlink,
   writeFile,
 } from "node:fs/promises";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
@@ -17,8 +18,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 // The local content editor end to end, in a disposable copy made by
 // npm run cms:demo-copy: Sveltia CMS at /admin, built and served by the
 // copy's own dev server, working on the copy's folder. Nothing here touches
-// this repository's content. The port is not the demo's usual 5173, so a
-// demo left running does not get in the way.
+// this repository's content. The dev server gets a free port chosen at run
+// time, so a demo left running or an earlier run does not get in the way.
 //
 // Playwright cannot operate the browser's native folder picker: it aborts
 // showDirectoryPicker. So the page gets a picker that returns a folder in
@@ -27,7 +28,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 // runs on top of this picker exactly as it does on the real one. Choosing
 // the real copy with the native picker is a manual check (README).
 const run = promisify(execFile);
-const SITE = "http://localhost:5179";
+/** The copy's dev server, as its "Local:" line reports it. */
+let SITE = "";
 const UPLOAD = "tests/fixtures/media/cms-replacement.png";
 const NEW_PROMPT = "Demo edit: which state is this landmark in?";
 const NEW_ALT = "Replacement placeholder picture for the demo edit.";
@@ -70,7 +72,12 @@ test.beforeAll(async () => {
   copy = join(root, "gwep-cst-cms-demo");
   const server = spawn(
     process.execPath,
-    ["node_modules/vite/bin/vite.js", "--port", "5179", "--strictPort"],
+    [
+      "node_modules/vite/bin/vite.js",
+      "--port",
+      String(await freePort()),
+      "--strictPort",
+    ],
     { cwd: copy },
   );
   servers.push(server);
@@ -81,7 +88,9 @@ test.beforeAll(async () => {
     }, 60_000);
     const watch = (chunk: Buffer) => {
       output += chunk.toString().replace(COLOUR_CODES, "");
-      if (output.includes("Local:")) {
+      const local = /Local:\s+(http:\/\/localhost:\d+)/.exec(output)?.[1];
+      if (local !== undefined) {
+        SITE = local;
         clearTimeout(timer);
         resolve();
       }
@@ -92,9 +101,42 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  for (const server of servers) server.kill("SIGTERM");
+  // Wait for each server to exit, so its port is free for the next run.
+  await Promise.all(
+    servers.map(
+      (server) =>
+        new Promise<void>((resolve) => {
+          if (server.exitCode !== null || server.signalCode !== null) {
+            resolve();
+            return;
+          }
+          server.once("exit", () => {
+            resolve();
+          });
+          server.kill("SIGTERM");
+        }),
+    ),
+  );
   await rm(root, { recursive: true, force: true });
 });
+
+/** A port no other program is listening on right now. */
+function freePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const probe = createServer();
+    probe.once("error", reject);
+    probe.listen(0, "localhost", () => {
+      const address = probe.address();
+      probe.close(() => {
+        if (typeof address === "object" && address !== null) {
+          resolve(address.port);
+        } else {
+          reject(new Error("No port was assigned"));
+        }
+      });
+    });
+  });
+}
 
 async function walk(folder: string): Promise<string[]> {
   const entries = await readdir(join(copy, folder), { withFileTypes: true });
@@ -505,11 +547,31 @@ test("the Orientation edit, by keyboard with visible focus: saved, valid and sho
   const upload = dialog.getByRole("button", { name: "Upload" });
   await tabTo(page, upload);
   await expectFocusVisible(upload);
-  const [chooser] = await Promise.all([
-    page.waitForEvent("filechooser"),
-    page.keyboard.press("Enter"),
-  ]);
-  await chooser.setFiles(UPLOAD);
+  // Enter on Upload makes the editor click its file input, which asks the
+  // browser for its file chooser. Headless Chromium does not always open
+  // that chooser for a keyboard-started click on a slow machine, so the
+  // test checks the click reached the input, then gives the file to that
+  // input directly: the change the chooser would make. The real chooser is
+  // a manual check (README).
+  await page.evaluate(() => {
+    for (const input of document.querySelectorAll<HTMLInputElement>(
+      'input[type="file"]',
+    )) {
+      input.addEventListener(
+        "click",
+        () => {
+          input.dataset.keyboardClicked = "true";
+        },
+        { once: true },
+      );
+    }
+  });
+  await page.keyboard.press("Enter");
+  const fileInput = page.locator(
+    'input[type="file"][data-keyboard-clicked="true"]',
+  );
+  await expect(fileInput).toHaveCount(1);
+  await fileInput.setInputFiles(UPLOAD);
   await expect(
     dialog.getByRole("option", {
       name: /cms-replacement\.png/,
