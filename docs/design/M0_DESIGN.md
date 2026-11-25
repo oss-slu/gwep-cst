@@ -6,7 +6,7 @@ Scope: milestone M0, the demo prototype for the GWEP meeting on Monday, November
 
 ## 1. Decision summary
 
-The CST platform is a static React and TypeScript single-page app served from Cloudflare's edge network. Session content is JSON in the repository, validated against a schema at build time, and edited by GWEP staff through Decap CMS, which saves edits as Git commits. There is no application server and no database on the viewer path.
+The CST platform is a static React and TypeScript single-page app served from Cloudflare's edge network. Session content is JSON in the repository, validated against a schema at build time, and edited by GWEP staff through a Git-based CMS (Decap CMS in M0, Sveltia CMS since #30), which saves edits as Git commits. There is no application server and no database on the viewer path.
 
 This is the simplest design that meets the known requirements, and it is also the fastest and most scalable option: every viewer request is a cached static file.
 
@@ -18,7 +18,7 @@ This is the simplest design that meets the known requirements, and it is also th
 | --- | --- |
 | Static SPA, no backend for viewers | Sessions are read-only content. A server would add cost, attack surface and failure modes with no benefit |
 | Content as JSON in Git, validated with zod | Full history, review and rollback for free. A bad edit fails the build instead of breaking the live site |
-| Decap CMS (Git-based) | GWEP edits without code. No database or CMS server to run or patch |
+| Git-based CMS: Decap CMS in M0, Sveltia CMS since #30 | GWEP edits without code. No database or CMS server to run or patch |
 | Cloudflare static hosting | Automatic HTTPS and certificate renewal, global caching, no servers to scale |
 | React with TypeScript strict, Vite | Widely known, strong typing, fast builds, easy for future OSS students |
 
@@ -47,7 +47,7 @@ Assumptions, and what happens if each one is wrong:
 
 **Sensitive assets:** the GitHub OAuth client secret, the Cloudflare deploy token, and GitHub credentials. None of them ever appears in the repository, logs or the client bundle. There is no personal or health data.
 
-**Security headers** (set in `public/_headers`): Content Security Policy with `default-src 'self'` and no inline scripts on the public site, `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, a restrictive `Permissions-Policy`, and HSTS. `/admin` gets its own policy that allows only the Decap script.
+**Security headers** (set in `public/_headers`): Content Security Policy with `default-src 'self'` and no inline scripts on the public site, `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, a restrictive `Permissions-Policy`, and HSTS. `/admin` gets its own policy: since #30, scripts, fonts and connections from this site only, with no `'unsafe-eval'` (in M0 it allowed only the pinned Decap script).
 
 **AI-specific risks**
 
@@ -146,7 +146,8 @@ src/
   player/         session player, navigation, keyboard handling
   ui/             shared accessible components (Button, Heading, FocusRing)
 content/sessions/ session JSON
-public/admin/     Decap CMS
+admin/            content editor (Sveltia CMS since #30)
+public/admin/     generated editor config
 public/_headers   security and caching headers
 ```
 
@@ -238,6 +239,6 @@ Recorded per pull request during M0 (#15 to #32). Full evidence is in each pull 
 | Q24 Code quality | Passed | Typed boundaries, no `any`, duplicated validation removed | #20, #22 to #24, #32 |
 | Performance budgets | Passed | All 8 Orientation deep links meet the 2.0 s LCP budget; initial JS 73.92 KB gzip | #32 |
 | INP | Not Tested | Not enforced in CI for M0 (§4.1) | |
-| Editor accessibility (axe) | **Failed** | Decap 3.17.3 has critical and serious violations; #14 stays open | #31, follow-up #30 |
+| Editor accessibility (axe) | **Failed** in M0 | Decap 3.17.3 has critical and serious violations; #14 stays open. Decap was replaced by Sveltia CMS in #30, whose evidence is in that pull request | #31, #30 |
 | Production sign-in, deployment, rollback, monitoring (Q1, Q2, Q19 to Q23) | Not Tested | No deployment in M0 | M1 |
 | Load testing (Q8, Q9, Q11, Q12) | Not Applicable for M0 | Static files only; revisit on Cloudflare in M1 | M1 |

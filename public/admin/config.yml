@@ -7,8 +7,13 @@
     "repo": "oss-slu/gwep-cst",
     "branch": "main"
   },
-  "local_backend": true,
   "publish_mode": "editorial_workflow",
+  "media_libraries": {
+    "stock_assets": false
+  },
+  "output": {
+    "omit_empty_optional_fields": true
+  },
   "media_folder": "public/media",
   "public_folder": "/media",
   "collections": [

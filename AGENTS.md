@@ -28,7 +28,7 @@ Available once the project is scaffolded:
 | `npm test` | Unit and component tests (Vitest) |
 | `npm run test:e2e` | End-to-end and accessibility tests (Playwright with axe-core) |
 | `npm run validate-content` | Validate every session file against the content schema |
-| `npm run cms:demo-copy` then `npm run cms:local` | Try the CMS locally in a disposable copy, without GitHub login (see README) |
+| `npm run cms:demo-copy`, then `npm run dev` in the copy | Try the content editor locally on a disposable copy, without GitHub login (see README) |
 
 Every pull request must pass lint, typecheck, test, validate-content and build in CI.
 
@@ -37,7 +37,8 @@ Every pull request must pass lint, typecheck, test, validate-content and build i
 ```
 content/sessions/<slug>.json   session content, edited through the CMS
 content/                       session catalog and site text
-public/admin/                  Decap CMS (index.html, generated config.yml)
+admin/                         content editor page (Sveltia CMS) and its folder guard
+public/admin/config.yml        editor config, generated from the slide registry
 public/media/<slug>/           images and audio per session
 public/_headers                security and caching headers
 src/app/                       routing, layout, error boundary
