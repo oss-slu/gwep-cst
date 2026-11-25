@@ -4,6 +4,7 @@ import { init } from "@sveltia/cms";
 import { guardFolderPicker } from "./folder-guard.ts";
 import { messages } from "./messages.ts";
 import { createNotice } from "./notice.ts";
+import { renderSlideListAtOnce } from "./render-at-once.ts";
 
 const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
@@ -17,4 +18,6 @@ if (
 ) {
   notice.show(messages.start, false);
 }
+// Every slide in the Tab order and to screen readers (render-at-once.ts).
+renderSlideListAtOnce(globalThis);
 await init();

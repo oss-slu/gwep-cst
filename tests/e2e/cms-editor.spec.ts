@@ -413,6 +413,33 @@ test("axe finds no serious or critical issues in the editor", async ({
   expect(found).toEqual([]);
 });
 
+test("every slide is in the Tab order: Tab alone reaches slide 7 and the closing slide", async ({
+  page,
+}) => {
+  // Sveltia CMS 0.263.0 renders slides only as they scroll into view; at
+  // this screen size Tab used to stop at slide 6 (admin/render-at-once.ts).
+  test.setTimeout(120_000);
+  await openEditor(page, await copyFiles());
+  await page.getByRole("button", { name: LOCAL }).click();
+  await page.getByRole("row", { name: "Orientation" }).click();
+  const title = page.getByRole("textbox", { name: "Session title" });
+  await title.focus();
+  for (const [item, heading] of [
+    ["Item 7 of 11", /7 Reveal/],
+    ["Item 11 of 11", /11 Title/],
+  ] as const) {
+    // The slide's own Expand or Collapse button, which shows its number
+    // and type.
+    const toggle = page
+      .getByRole("group", { name: item })
+      .getByRole("button", { name: /^(Expand|Collapse)$/ })
+      .first();
+    await tabTo(page, toggle, "forward", 400);
+    await expect(toggle).toHaveText(heading);
+    await expectFocusVisible(toggle);
+  }
+});
+
 test("the Orientation edit, by keyboard with visible focus: saved, valid and shown in the player", async ({
   page,
 }) => {
@@ -437,15 +464,6 @@ test("the Orientation edit, by keyboard with visible focus: saved, valid and sho
   await tabTo(page, collapse);
   await expectFocusVisible(collapse);
   await page.keyboard.press("Enter");
-  // Known limitation (Sveltia CMS 0.263.0): list items render only once
-  // scrolled into view, so Tab alone can stop at slide 6 with the rest not
-  // yet on the page. Page Down, from inside the list, scrolls it and the
-  // rest appear; Tab then continues.
-  const sixth = page
-    .getByRole("group", { name: "Item 6 of 11" })
-    .getByRole("button", { name: "Remove" });
-  await tabTo(page, sixth);
-  await page.keyboard.press("PageDown");
   const item = page.getByRole("group", { name: "Item 7 of 11" });
   const expand = item.getByRole("button", { name: "Expand" });
   await tabTo(page, expand);
@@ -463,8 +481,15 @@ test("the Orientation edit, by keyboard with visible focus: saved, valid and sho
   });
   await tabTo(page, replace);
   await expectFocusVisible(replace);
-  await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Select Image" });
+  // Escape closes the picture dialog and returns focus to Replace Image.
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(replace).toBeFocused();
+  await expect(replace).toHaveAccessibleName("Replace Image");
+  await page.keyboard.press("Enter");
   const upload = dialog.getByRole("button", { name: "Upload" });
   await tabTo(page, upload);
   await expectFocusVisible(upload);

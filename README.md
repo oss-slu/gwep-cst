@@ -117,7 +117,9 @@ Headers: `public/_headers` gives `/admin` its own content security policy: scrip
 
 Manual check, after editor changes: Playwright cannot operate the browser's native folder picker, so the tests use a stand-in folder. Once, in Chrome, choose **Work with Local Repository**, pick the real `gwep-cst-cms-demo` folder and save an edit; then pick this repository's own folder and confirm it is refused.
 
-Known limits: Sveltia renders long lists (such as the slides) as they scroll into view. If Tab stops at the last visible slide, press **Page Down** inside the list and the remaining slides appear. Signing in with GitHub is shown but not set up locally.
+Slide list: Sveltia CMS 0.263.0 renders list items only as they scroll into view, which left later slides out of the Tab order and hidden from screen readers. `admin/render-at-once.ts` has the slides in the edit pane's slide list rendered at once, so Tab reaches every slide; a test reaches slide 7 and the closing slide by Tab alone. Remove it once Sveltia renders every list item itself.
+
+Known limit: signing in with GitHub is shown but not set up locally (production sign-in is a separate M1 issue).
 
 ## CMS config
 
