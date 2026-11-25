@@ -144,7 +144,7 @@ describe("headers for the content editor at /admin", () => {
   });
 
   it("the editor page loads one same-origin module and no inline script", () => {
-    const scripts = adminPage.match(/<script\b[^>]*>/g) ?? [];
+    const scripts = adminPage.match(/<script\b[^>]*>/gi) ?? [];
     expect(scripts).toEqual(['<script type="module" src="./main.ts">']);
     expect(adminPage).not.toMatch(/https?:\/\//);
   });
