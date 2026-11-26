@@ -69,7 +69,8 @@ jobs:
           sudo apt-get install --yes --no-install-recommends ffmpeg
           ffmpeg -hide_banner -version | head -n 1
           ffprobe -hide_banner -version | head -n 1
-      - run: npx playwright install --with-deps chromium
+      # The locked version from node_modules, never a download by npx.
+      - run: ./node_modules/.bin/playwright install --with-deps chromium
       - run: npm run test:e2e
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -140,7 +141,7 @@ jobs:
       - name: Install gitleaks (checksum verified)
         run: |
           archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          curl -sSfLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
+          curl --proto "=https" --tlsv1.2 -sSfLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
           echo "${GITLEAKS_SHA256}  ${archive}" | sha256sum --check --strict
           tar -xzf "${archive}" gitleaks
       # "-m" includes merge commits, compared with each parent, so a secret
