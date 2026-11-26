@@ -18,7 +18,7 @@ declare global {
 /** Written by cms:demo-copy at .git/cms-demo-copy.json (scripts/cms/demo.ts). */
 const MARKER = "cms-demo-copy.json";
 const COMMIT = /^[0-9a-f]{40}$/;
-const REMOTE_SECTION = /^\s*\[remote\s/m;
+const REMOTE_SECTION = /^[ \t]*\[remote[ \t]/m;
 
 async function readText(
   folder: FileSystemDirectoryHandle,
